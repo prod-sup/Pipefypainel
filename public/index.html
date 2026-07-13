@@ -1,0 +1,2142 @@
+<!DOCTYPE html>
+
+<html class="dark" lang="en"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>Suprema Kanban Board</title>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<script src="https://cdn.jsdelivr.net/npm/sortablejs@1.15.0/Sortable.min.js"></script>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com" rel="preconnect"/>
+<link crossorigin="" href="https://fonts.gstatic.com" rel="preconnect"/>
+<link href="https://fonts.googleapis.com/css2?family=Geist:wght@400;500;600;700&amp;display=swap" rel="stylesheet"/>
+<script id="tailwind-config">
+        tailwind.config = {
+            darkMode: "class",
+            theme: {
+                extend: {
+                    colors: {
+                        "on-error": "#690005",
+                        "on-secondary-container": "#beb8ad",
+                        "primary": "#ffd196",
+                        "tertiary-fixed": "#ebe1da",
+                        "on-background": "#e2e2e2",
+                        "on-secondary-fixed-variant": "#4a463e",
+                        "surface-variant": "#353535",
+                        "surface-tint": "#ffb954",
+                        "surface-container-high": "#2a2a2a",
+                        "secondary-container": "#4c4940",
+                        "surface-bright": "#393939",
+                        "on-tertiary-fixed": "#1f1b17",
+                        "on-secondary-fixed": "#1e1b14",
+                        "secondary": "#ccc6bb",
+                        "tertiary-fixed-dim": "#cec5bf",
+                        "error-container": "#93000a",
+                        "background": "#161412",
+                        "inverse-on-surface": "#303030",
+                        "secondary-fixed-dim": "#ccc6bb",
+                        "surface-dim": "#161412",
+                        "on-primary-container": "#6a4400",
+                        "secondary-fixed": "#e8e2d6",
+                        "on-surface-variant": "#d5c4b0",
+                        "on-primary": "#452b00",
+                        "error": "#ffb4ab",
+                        "primary-fixed": "#ffddb4",
+                        "primary-fixed-dim": "#ffb954",
+                        "on-tertiary-fixed-variant": "#4c4641",
+                        "on-primary-fixed-variant": "#633f00",
+                        "primary-container": "#f4b04c",
+                        "tertiary": "#e0d7d0",
+                        "surface-container-lowest": "#0e0e0e",
+                        "outline-variant": "#514536",
+                        "outline": "#9e8e7d",
+                        "on-error-container": "#ffdad6",
+                        "on-secondary": "#333028",
+                        "on-primary-fixed": "#291800",
+                        "on-tertiary-container": "#514b46",
+                        "surface-container": "#231F1C",
+                        "surface-container-highest": "#353535",
+                        "inverse-surface": "#e2e2e2",
+                        "inverse-primary": "#835500",
+                        "on-tertiary": "#352f2b",
+                        "surface-container-low": "#1b1b1b",
+                        "on-surface": "#e2e2e2",
+                        "surface": "#161412",
+                        "tertiary-container": "#c4bbb5"
+                    },
+                    borderRadius: {
+                        "DEFAULT": "0.125rem",
+                        "lg": "0.25rem",
+                        "xl": "0.5rem",
+                        "full": "0.75rem"
+                    },
+                    spacing: {
+                        "margin-desktop": "64px",
+                        "container-max": "1440px",
+                        "gutter": "24px",
+                        "unit": "4px",
+                        "margin-mobile": "20px"
+                    },
+                    fontFamily: {
+                        "display-lg": ["Geist"],
+                        "body-md": ["Geist"],
+                        "headline-md": ["Geist"],
+                        "body-lg": ["Geist"],
+                        "display-lg-mobile": ["Geist"],
+                        "label-sm": ["Geist"]
+                    },
+                    fontSize: {
+                        "display-lg": ["48px", { "lineHeight": "1.1", "letterSpacing": "-0.02em", "fontWeight": "600" }],
+                        "body-md": ["16px", { "lineHeight": "1.5", "letterSpacing": "0", "fontWeight": "400" }],
+                        "headline-md": ["24px", { "lineHeight": "1.3", "letterSpacing": "-0.01em", "fontWeight": "500" }],
+                        "body-lg": ["18px", { "lineHeight": "1.6", "letterSpacing": "0", "fontWeight": "400" }],
+                        "display-lg-mobile": ["32px", { "lineHeight": "1.2", "letterSpacing": "-0.01em", "fontWeight": "600" }],
+                        "label-sm": ["12px", { "lineHeight": "1", "letterSpacing": "0.05em", "fontWeight": "500" }]
+                    }
+                }
+            }
+        }
+    </script>
+<style>
+        body {
+            background-color: #161412;
+            color: #FAF3E7;
+            font-family: 'Geist', sans-serif;
+            overflow-x: hidden;
+        }
+        
+        /* Custom Colors */
+        .prompt-gradient-text { 
+            background: linear-gradient(135deg, #F4B04C 0%, #ECA045 50%, #D98522 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+        
+        .kanban-card {
+            transition: all 0.3s ease;
+            position: relative;
+        }
+        
+        ::-webkit-scrollbar { width: 6px; height: 6px; }
+        ::-webkit-scrollbar-track { background: transparent; }
+        ::-webkit-scrollbar-thumb { background: #302B27; border-radius: 4px; }
+        ::-webkit-scrollbar-thumb:hover { background: #514536; }
+
+        /* Hide drawer initially */
+        #club-drawer:not(.open) {
+            transform: translateX(-100%);
+        }
+
+        /* Concluído: cards finalizados com aspecto atenuado */
+        [data-fase-id="326331445"] .kanban-card {
+            opacity: 0.4;
+            filter: grayscale(0.3);
+        }
+    </style>
+</head>
+<body class="flex flex-col h-screen w-screen overflow-hidden antialiased">
+<!-- Floating Drawer (Hidden by default) -->
+<!-- Floating TopNavBar -->
+<header class="flex justify-between items-center w-full px-12 py-8 max-w-[1920px] mx-auto bg-[#161412] z-30 flex-shrink-0">
+<div class="flex items-center gap-4">
+<div class="font-display-lg text-display-lg font-bold tracking-tight" style="color: rgb(236, 160, 69); font-size: 28px;">
+            Suprema
+      </div>
+    </div>
+<nav class="flex items-center gap-10 ml-12"><a class="text-sm font-bold tracking-[0.1em] prompt-gradient-text uppercase" href="#">KANBAN</a><a class="text-sm font-bold tracking-[0.1em] uppercase text-[#90887D] hover:text-[#FAF3E7] transition-colors" href="#">CLUBES</a><a class="text-sm font-bold tracking-[0.1em] uppercase text-[#90887D] hover:text-[#FAF3E7] transition-colors" href="#">USUÁRIOS</a><a class="text-sm font-bold tracking-[0.1em] uppercase text-[#90887D] hover:text-[#FAF3E7] transition-colors" href="#">ANALYTICS</a></nav>
+<div class="flex items-center gap-8">
+<div class="relative flex items-center">
+<span class="material-symbols-outlined absolute left-3 text-[#90887D] pointer-events-none" style="font-size: 18px;">search</span>
+<input type="text" id="pesquisa-input" placeholder="Pesquisar..." class="w-48 bg-[#231F1C] border border-[#302B27] rounded-lg py-2 pl-10 pr-3 text-sm text-[#FAF3E7] placeholder-[#90887D] focus:outline-none focus:border-[#ECA045] transition-colors">
+</div>
+<div class="w-12 h-12 rounded-full overflow-hidden border" style="border-color: #302B27;">
+<img alt="User profile avatar" class="w-full h-full object-cover" src="https://lh3.googleusercontent.com/aida-public/AB6AXuCohVPEXyWkVHhn7H1orWaXX9c5SlJoVNbPdDMTzwfssqbxDpxKsUBj4VUrw4CbY_6IodliBVBOTQP5KC9c0WhMXAwWra_OOpbQalrBaAwfIcryrdhrNKrU2UUGjY_gUNb3i7LAXE7VEPOKh9Dg-4Lddu4aBJsLtjrGTh7DLbcDEhcruvxUb0Qy96JrNnJLiryQOKxdy_q6PcysigR5ExbetE7pRs_VsFWCiMdrzNseso1LHC3vAMEEHVdMkGRoAiHazrKGX-QjftE"/>
+</div>
+</div>
+</header>
+<div class="flex flex-1 overflow-hidden w-full max-w-[1920px] mx-auto relative">
+<!-- Kanban Board Canvas (Now full width) -->
+<main class="flex-1 overflow-x-auto overflow-y-hidden p-8 pt-0">
+<div class="grid grid-cols-5 gap-4 w-full h-full pb-4">
+<!-- Column 1: Caixa de Entrada -->
+<div class="flex flex-col min-w-0 min-h-0 rounded-2xl border p-4" data-fase-id="326331441" style="border-color: rgba(60, 54, 49, 0.4); background-color: rgba(22, 20, 18, 0.6);">
+<div class="flex justify-between items-center mb-6 pb-4 border-b" style="border-color: rgba(60, 54, 49, 0.5);">
+<h3 class="font-headline-md text-sm font-semibold uppercase tracking-[0.2em]" style="color: rgb(250, 243, 231);">Caixa de Entrada</h3>
+<div class="flex flex-row items-center gap-3">
+<span class="contador-badge px-2.5 py-1 rounded-md text-xs font-bold" style="background-color: rgb(53, 53, 53); color: rgb(160, 150, 140);">0</span>
+</div>
+</div>
+<div class="coluna-body flex-1 overflow-y-auto space-y-4 pr-2">
+
+<div class="rounded-xl py-3 px-3 border border-dashed flex justify-center items-center cursor-pointer hover:bg-[rgba(255,255,255,0.02)] transition-colors mb-4 gap-1 adicionar-card-footer" style="border-color: #302B27; color: #90887D; background-color: rgba(255, 255, 255, 0.01);"><span class="material-symbols-outlined text-base">add</span> <span class="font-medium text-sm uppercase">Adicionar Card</span></div>
+<button onclick="abrirModalTemplates()" class="w-full mt-2 py-2 rounded-xl text-xs font-bold tracking-widest text-[#ECA045] bg-transparent border border-[#ECA045]/30 hover:bg-[#ECA045]/10 hover:border-[#ECA045] transition-all flex items-center justify-center">
+  BIBLIOTECA DE EVENTOS
+</button>
+</div>
+</div>
+<!-- Column 2: Análise de Estrutura -->
+<div class="flex flex-col min-w-0 min-h-0 rounded-2xl border p-4" data-fase-id="326331442" style="border-color: rgba(60, 54, 49, 0.4); background-color: rgba(22, 20, 18, 0.6);">
+<div class="flex justify-between items-center mb-6 pb-4 border-b" style="border-color: rgba(60, 54, 49, 0.5);">
+<h3 class="font-headline-md text-sm font-semibold uppercase tracking-[0.2em]" style="color: rgb(250, 243, 231);">Análise de Estrutura</h3>
+<div class="flex flex-row items-center gap-3">
+<span class="contador-badge px-2.5 py-1 rounded-md text-xs font-bold" style="background-color: rgb(53, 53, 53); color: rgb(160, 150, 140);">0</span>
+</div>
+</div>
+<div class="coluna-body flex-1 overflow-y-auto space-y-4 pr-2">
+
+</div>
+</div>
+<!-- Column 3: Criação -->
+<div class="flex flex-col min-w-0 min-h-0 rounded-2xl border p-4" data-fase-id="326331443" style="border-color: rgba(60, 54, 49, 0.4); background-color: rgba(22, 20, 18, 0.6);">
+<div class="flex justify-between items-center mb-6 pb-4 border-b" style="border-color: rgba(60, 54, 49, 0.5);">
+<h3 class="font-headline-md text-sm font-semibold uppercase tracking-[0.2em]" style="color: rgb(250, 243, 231);">Criação</h3>
+<div class="flex flex-row items-center gap-3">
+<span class="contador-badge px-2.5 py-1 rounded-md text-xs font-bold" style="background-color: rgb(53, 53, 53); color: rgb(160, 150, 140);">0</span>
+</div>
+</div>
+<div class="coluna-body flex-1 overflow-y-auto space-y-4 pr-2">
+
+</div>
+</div>
+<!-- Column 4: Lobby -->
+<div class="flex flex-col min-w-0 min-h-0 rounded-2xl border p-4" data-fase-id="326331444" style="border-color: rgba(60, 54, 49, 0.4); background-color: rgba(22, 20, 18, 0.6);">
+<div class="flex justify-between items-center mb-6 pb-4 border-b" style="border-color: rgba(60, 54, 49, 0.5);">
+<h3 class="font-headline-md text-sm font-semibold uppercase tracking-[0.2em]" style="color: rgb(250, 243, 231);">Lobby</h3>
+<div class="flex flex-row items-center gap-3">
+<span class="contador-badge px-2.5 py-1 rounded-md text-xs font-bold" style="background-color: rgb(53, 53, 53); color: rgb(160, 150, 140);">0</span>
+</div>
+</div>
+<div class="coluna-body flex-1 overflow-y-auto space-y-4 pr-2">
+
+</div>
+</div>
+<!-- Column 5: Concluído -->
+<div class="flex flex-col min-w-0 min-h-0 rounded-2xl border p-4" data-fase-id="326331445" style="border-color: rgba(60, 54, 49, 0.4); background-color: rgba(22, 20, 18, 0.6);">
+<div class="flex justify-between items-center mb-6 pb-4 border-b" style="border-color: rgba(60, 54, 49, 0.5);">
+<h3 class="font-headline-md text-sm font-semibold uppercase tracking-[0.2em]" style="color: rgb(250, 243, 231);">Concluído</h3>
+<div class="flex flex-row items-center gap-3">
+<span class="contador-badge px-2.5 py-1 rounded-md text-xs font-bold" style="background-color: rgb(53, 53, 53); color: rgb(160, 150, 140);">0</span>
+</div>
+</div>
+<div class="coluna-body flex-1 overflow-y-auto space-y-4 pr-2">
+
+</div>
+</div>
+</div>
+</main>
+</div>
+<script>
+let cardIdAtual = null;
+
+const COLUNA_ORDEM = ['326331441','326331442','326331443','326331444','326331445'];
+
+function mostrarLoading(texto) {
+  const loader = document.getElementById('global-loader');
+  const loaderText = document.getElementById('global-loader-text');
+  if (texto) loaderText.textContent = texto;
+  loader.classList.remove('hidden');
+}
+
+function ocultarLoading() {
+  const loader = document.getElementById('global-loader');
+  loader.classList.add('hidden');
+  document.getElementById('global-loader-text').textContent = 'CARREGANDO...';
+}
+
+document.addEventListener('click', function(e) {
+  const btn = e.target.closest('[data-acao]');
+  if (!btn) return;
+
+  const cardEl = btn.closest('[data-card-id]');
+  const cardId = cardEl?.dataset.cardId;
+  if (!cardId) return;
+
+  const faseAtual = btn.closest('[data-fase-id]')?.dataset.faseId;
+  const acao = btn.dataset.acao;
+
+  if (acao === 'duplicar') {
+    e.stopPropagation();
+    const modal = document.getElementById('clone-modal');
+    modal.dataset.cardId = cardId;
+    modal.dataset.faseId = faseAtual;
+    modal.classList.remove('hidden');
+    return;
+  }
+
+  if (acao === 'mover-esquerda' || acao === 'mover-direita') {
+    const idx = COLUNA_ORDEM.indexOf(faseAtual);
+    if (idx === -1) return;
+    const dir = acao === 'mover-direita' ? 1 : -1;
+    const destId = COLUNA_ORDEM[idx + dir];
+    if (!destId) return;
+
+    fetch('/api/mover-card', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ card_id: cardId, fase_destino_id: destId })
+    })
+    .then(r => r.json())
+    .then(d => {
+      if (d.success) window.location.reload();
+      else alert('Erro: ' + (d.error || 'desconhecido'));
+    })
+  .catch(err => alert('Erro de rede: ' + err.message))
+  .finally(() => ocultarLoading());
+}
+});
+</script>
+<script>
+document.querySelectorAll('.coluna-body').forEach(el => {
+  new Sortable(el, {
+    group: 'kanban',
+    animation: 200,
+    ghostClass: 'opacity-30',
+    dragClass: 'opacity-90',
+    filter: '.adicionar-card-footer',
+    handle: '.drag-handle',
+    onEnd: function(evt) {
+      if (evt.from === evt.to) return;
+      const cardEl = evt.item;
+      const cardId = cardEl.dataset.cardId;
+      const destFaseId = evt.to.closest('[data-fase-id]').dataset.faseId;
+      if (!cardId || !destFaseId) return;
+      cardEl.style.opacity = '0.4';
+      cardEl.style.pointerEvents = 'none';
+      fetch('/api/mover-card', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ card_id: cardId, fase_destino_id: destFaseId })
+      })
+      .then(r => r.json())
+      .then(d => {
+        cardEl.style.opacity = '';
+        cardEl.style.pointerEvents = '';
+        if (d.success) {
+          atualizarContadores();
+        } else {
+          alert('Erro: ' + (d.error || 'desconhecido'));
+          evt.from.appendChild(cardEl);
+        }
+      })
+      .catch(err => {
+        cardEl.style.opacity = '';
+        cardEl.style.pointerEvents = '';
+        alert('Erro de rede: ' + err.message);
+        evt.from.appendChild(cardEl);
+      });
+    }
+  });
+});
+function atualizarContadores() {
+  document.querySelectorAll('[data-fase-id]').forEach(col => {
+    const badge = col.querySelector('.contador-badge');
+    if (badge) {
+      badge.textContent = col.querySelectorAll('[data-card-id]').length;
+    }
+  });
+}
+
+document.getElementById('pesquisa-input').addEventListener('input', function() {
+  const termo = this.value.toLowerCase().trim();
+  const ativo = termo !== '';
+
+  document.querySelectorAll('.kanban-card').forEach(card => {
+    const corresponde = !ativo || card.textContent.toLowerCase().includes(termo);
+    card.classList.toggle('hidden', !corresponde);
+  });
+
+  document.querySelectorAll('.adicionar-card-footer').forEach(el => {
+    el.classList.toggle('hidden', ativo);
+  });
+
+  document.querySelectorAll('[data-fase-id]').forEach(col => {
+    const badge = col.querySelector('.contador-badge');
+    if (badge) {
+      badge.textContent = col.querySelectorAll('.kanban-card:not(.hidden)').length;
+    }
+  });
+});
+</script>
+
+<!-- Modal de Detalhes do Card -->
+<div id="card-modal" class="fixed inset-0 z-50 flex items-center justify-center hidden">
+  <div class="absolute inset-0 bg-black/60 backdrop-blur-sm" onclick="fecharModal()"></div>
+  <div class="relative bg-[#1A1816] border border-[#302B27] rounded-2xl p-6 max-w-lg w-full mx-4 max-h-[80vh] flex flex-col shadow-2xl">
+    <button onclick="fecharModal()" class="absolute top-4 right-4 text-[#90887D] hover:text-white transition-colors">
+      <span class="material-symbols-outlined">close</span>
+    </button>
+
+    <h2 class="text-lg font-bold text-[#ECA045] mb-5 pr-8 uppercase tracking-wider" id="modal-titulo"></h2>
+
+    <div class="flex items-center w-full mb-6">
+      <div class="flex gap-3">
+        <button id="btn-aba1" class="px-5 py-2 rounded-lg bg-[#ECA045] text-black font-semibold text-sm transition-all shadow-md border border-[#ECA045]">Informações Iniciais</button>
+        <button id="btn-aba2" class="px-5 py-2 rounded-lg bg-transparent text-[#7A7265] font-semibold text-sm hover:text-[#D4CFC7] hover:border-[#7A7265] transition-all border border-[#302B27]">Estrutura Solicitada</button>
+      </div>
+      <div id="container-btn-upload-lobby" class="ml-auto"></div>
+    </div>
+
+    <div class="overflow-y-auto pr-2 custom-scrollbar">
+      <div id="aba1-conteudo" class="space-y-3 text-sm"></div>
+      <div id="aba2-conteudo" class="space-y-3 text-sm hidden">
+          <p class="text-[#7A7265] italic">Em construção...</p>
+    </div>
+    <div class="border-t border-[#302B27]/50 pt-4 mt-4">
+      <button onclick="abrirModalNomearTemplate()" class="w-full py-2 rounded-xl text-xs font-bold tracking-widest text-[#ECA045] bg-transparent border border-[#ECA045]/30 hover:bg-[#ECA045]/10 hover:border-[#ECA045] transition-all flex items-center justify-center uppercase">
+        Salvar Evento
+      </button>
+    </div>
+  </div>
+</div>
+</div>
+
+<script>
+function abrirModal(cardId) {
+  mostrarLoading('ABRINDO CARD...');
+  fetch(`/api/cards/${cardId}`)
+    .then(r => r.json())
+    .then(data => {
+      if (!data.success) return;
+
+            cardIdAtual = cardId;
+            const card = data.card;
+            console.log('Campos recebidos da API:', card.campos);
+
+            const faseAtualNome = card.current_phase?.name || '';
+
+            let btnAnexoLobby = '';
+            if (faseAtualNome.toUpperCase() === 'CRIAÇÃO' || faseAtualNome.toUpperCase() === 'CRIACAO') {
+                btnAnexoLobby = `
+                    <div class="ml-auto">
+                        <a href="https://app.pipefy.com/pipes/304354423#cards/${cardIdAtual}" target="_blank"
+                           class="py-2 px-4 rounded-lg bg-[#24201D] border border-[#302B27] text-[#7A7265] hover:text-[#ECA045] hover:border-[#ECA045] transition-all flex items-center gap-2 text-sm font-semibold">
+                            <span class="material-symbols-outlined" style="font-size: 18px;">open_in_new</span>
+                            Anexar Print
+                        </a>
+                    </div>`;
+            }
+
+            const normalizar = (str) => str ? str.toLowerCase().trim().replace(/\s+/g, ' ') : '';
+
+            const formatarBooleano = (str) => {
+                if (!str || str === '-') return '-';
+                const val = str.toLowerCase().trim();
+                if (val.includes('sim') || val === 'yes') return 'SIM';
+                if (val.includes('não') || val.includes('nao') || val === 'no') return 'NÃO';
+                return str;
+            };
+
+            const formatarLinkAnexo = (val) => {
+                if (!val || val === '-') return '-';
+                if (typeof val === 'string' && val.trim().startsWith('[') && val.trim().endsWith(']')) {
+                    try {
+                        const arr = JSON.parse(val);
+                        if (Array.isArray(arr) && arr.length > 0) {
+                            return arr.map((url, index) => `
+                                <a href="${url}" target="_blank" class="inline-flex items-center gap-1 text-[#ECA045] font-semibold underline hover:text-[#f0b467] transition-colors mb-1 block">
+                                    Abrir Anexo ${arr.length > 1 ? index + 1 : ''} ↗
+                                </a>
+                            `).join('');
+                        }
+                    } catch(e) {}
+                }
+                if (typeof val === 'string' && (val.includes('http://') || val.includes('https://'))) {
+                    return `<a href="${val}" target="_blank" class="inline-flex items-center gap-1 text-[#ECA045] font-semibold underline hover:text-[#f0b467] transition-colors">Abrir Anexo ↗</a>`;
+                }
+                return val;
+            };
+
+            const getCampoInfo = (chaveBusca) => {
+                const busca = normalizar(chaveBusca);
+                let campo = card.campos.find(c => normalizar(c.name) === busca);
+                if (!campo) campo = card.campos.find(c => normalizar(c.name).includes(busca));
+                const rawValor = campo && (campo.value !== null && campo.value !== undefined && campo.value !== '') ? campo.value : '-';
+                return {
+                    valor: formatarBooleano(rawValor),
+                    field_id: campo?.field_id || null
+                };
+            };
+            const getValor = (chave) => getCampoInfo(chave).valor;
+
+            const cardTemplate = (rotulo, valor, destaque = false, fieldId = null) => {
+                const borderClass = destaque ? 'border-[#ECA045] bg-[#2A231D]' : 'border-[#302B27]/50 bg-[#24201D]';
+                const titleClass = destaque ? 'text-[#ECA045]' : 'text-[#7A7265]';
+                const editIcon = fieldId
+                    ? `<button onclick="abrirModalEdicao('${fieldId}', '${rotulo}', '${valor}')" class="absolute top-2 right-2 text-[#7A7265] hover:text-[#ECA045] opacity-0 group-hover:opacity-100 transition-opacity"><span class="material-symbols-outlined text-base">edit</span></button>`
+                    : '';
+                return `
+                    <div class="${borderClass} p-3 rounded-lg border transition-all relative group">
+                        ${editIcon}
+                        <span class="${titleClass} text-xs font-semibold uppercase tracking-wider mb-1 block">${rotulo}</span>
+                        <span class="text-[#D4CFC7] text-base block break-words">${valor}</span>
+                    </div>
+                `;
+            };
+
+            // --- REGRA DE NEGÓCIO: HANDCAP E CÁLCULOS MULTIPLICADOS ---
+            const handcaps = {
+                106: 5, 107: 5, 111: 0.8, 113: 1, 127: 3.5, 128: 5,
+                132: 0.8, 136: 18, 137: 0.8, 145: 0.8, 147: 5,
+                148: 0.8, 150: 10, 166: 0.8, 173: 0.8, 204: 0.8,
+                205: 0.7, 220: 60
+            };
+
+            const strLiga = getValor("liga");
+            const matchLiga = strLiga.match(/\d+/);
+            const idLiga = matchLiga ? parseInt(matchLiga[0], 10) : null;
+            const multiplicador = (idLiga && handcaps[idLiga]) ? handcaps[idLiga] : 1;
+
+            const calcularComHandcap = (valorString) => {
+                if (!valorString || valorString === '-') return '-';
+
+                let numStr = valorString.toUpperCase().replace(/[^\d.,K]/g, '');
+                let valorNum = 0;
+
+                if (numStr.includes('K')) {
+                    numStr = numStr.replace('K', '').replace(',', '.');
+                    valorNum = parseFloat(numStr) * 1000;
+                } else {
+                    numStr = numStr.replace(/\./g, '').replace(',', '.');
+                    valorNum = parseFloat(numStr);
+                }
+
+                if (!isNaN(valorNum) && valorNum > 0) {
+                    const resultado = valorNum / multiplicador;
+                    const resultadoFormatado = resultado.toLocaleString('pt-BR', {
+                        minimumFractionDigits: 0,
+                        maximumFractionDigits: 2
+                    });
+                    return `${valorNum.toLocaleString('pt-BR')} ÷ ${multiplicador} = <span class="text-[#ECA045] font-bold text-lg ml-1">${resultadoFormatado}</span>`;
+                }
+                return '-';
+            };
+
+            // --- EXTRAÇÃO DE DADOS COM FIELD_ID ---
+            const infoPremio = getCampoInfo("premiação garantida");
+            const strPremio = infoPremio.valor;
+            const gtdCalculado = strPremio !== '-' ? calcularComHandcap(strPremio) : '-';
+
+            const infoTickets = getCampoInfo("tickets");
+            const strTickets = infoTickets.valor;
+            const ticketCalculado = strTickets !== '-' ? calcularComHandcap(strTickets) : '-';
+
+            const infoBuyIn = getCampoInfo("buy-in");
+            const strBuyIn = infoBuyIn.valor;
+            const buyInCalculado = strBuyIn !== '-' ? calcularComHandcap(strBuyIn) : '-';
+
+            const valRebuy = formatarBooleano(getValor("rebuy:"));
+            let rebuyCalculado = '-';
+            let infoStackRebuy = { valor: '-', field_id: null };
+
+            if (valRebuy !== 'NÃO') {
+                const strRebuyValor = getValor("rebuy (valor");
+                rebuyCalculado = strRebuyValor !== '-' ? calcularComHandcap(strRebuyValor) : '-';
+                infoStackRebuy = getCampoInfo("stack (rebuy)");
+            }
+
+            const valAddon = formatarBooleano(getValor("add-on:"));
+            let addonCalculado = '-';
+            let infoStackAddon = { valor: '-', field_id: null };
+
+            if (valAddon !== 'NÃO') {
+                const strAddonValor = getValor("add-on (valor");
+                addonCalculado = strAddonValor !== '-' ? calcularComHandcap(strAddonValor) : '-';
+                infoStackAddon = getCampoInfo("stack (add-on)");
+            }
+
+            const infoDataHora = getCampoInfo("data e hora/date and time");
+            const valDataHora = infoDataHora.valor;
+
+            const infoProtocolo = getCampoInfo("protocolo");
+            const valProtocolo = infoProtocolo.valor !== '-' ? infoProtocolo.valor : (card.id || '-');
+
+            const infoMaterial = getCampoInfo("material de divulgação");
+            const valMaterial = formatarLinkAnexo(infoMaterial.valor);
+
+            const infoNomeClube = getCampoInfo("nome do clube");
+            const infoIDClube = getCampoInfo("id do clube");
+            const infoMoeda = getCampoInfo("moeda");
+            const infoLiga = getCampoInfo("liga");
+            const infoObs = getCampoInfo("obs:");
+
+            const infoTipoEvento = getCampoInfo("tipo do evento");
+            const infoModalidade = getCampoInfo("modalidade");
+            const infoNomeEvento = getCampoInfo("nome do evento");
+            const infoSenha = getCampoInfo("senha");
+            const infoNumJogadores = getCampoInfo("nº de jogadores");
+            const infoTempoAcao = getCampoInfo("tempo de ação");
+            const infoVagas = getCampoInfo("nº de vagas garantidas");
+            const infoCalcPagamento = getCampoInfo("cálculo de pagamento");
+            const infoRebuysQTD = getCampoInfo("rebuys (qtd)");
+            const infoRebuyDuplo = getCampoInfo("rebuy duplo");
+            const infoIntervaloAddon = getCampoInfo("intervalo add-on");
+            const infoRake = getCampoInfo("rake");
+            const infoBlinds = getCampoInfo("blinds (estrutura");
+            const infoStackFichas = getCampoInfo("stack de fichas");
+            const infoTempoBlinds = getCampoInfo("tempo de blinds");
+            const infoRegistroTardio = getCampoInfo("registro tardio");
+            const infoEarlyBird = getCampoInfo("early bird");
+            const infoEarlyBirdLevel = getCampoInfo("early bird level");
+            const infoEstruturaEarlyBird = getCampoInfo("estrutura/structure de % do early bird");
+
+            let htmlAba1 = `
+                ${cardTemplate("Protocolo", valProtocolo)}
+                <div class="grid grid-cols-2 gap-3">
+                    ${cardTemplate("Nome do Clube", getCampoInfo("nome do clube").valor, false, getCampoInfo("nome do clube").field_id)}
+                    ${cardTemplate("ID do Clube", getCampoInfo("id do clube").valor, false, getCampoInfo("id do clube").field_id)}
+                </div>
+                ${cardTemplate("Moeda", getCampoInfo("moeda").valor, false, getCampoInfo("moeda").field_id)}
+                ${cardTemplate("Liga", getCampoInfo("liga").valor, false, getCampoInfo("liga").field_id)}
+                ${cardTemplate("Observações", getCampoInfo("obs:").valor, false, getCampoInfo("obs:").field_id)}
+                ${cardTemplate("Material de Divulgação", valMaterial)}
+                ${cardTemplate("Data e Hora", valDataHora, false, getCampoInfo("data e hora/date and time").field_id)}
+            `;
+
+            let htmlCobranca = '';
+            if (faseAtualNome.toUpperCase() === 'CRIAÇÃO' || faseAtualNome.toUpperCase() === 'CRIACAO') {
+                const infoCobranca = getCampoInfo("Cobrança de Diamantes");
+                htmlCobranca = `
+                    <div class="mt-6 p-4 border border-[#302B27] rounded-lg bg-[#24201D]">
+                        <span class="text-[#7A7265] text-xs font-semibold uppercase mb-3 block">Cobrança de Diamantes</span>
+                        <div class="flex gap-6">
+                            <label class="flex items-center gap-2 cursor-pointer text-[#D4CFC7]">
+                                <input type="radio" name="cobranca_diamantes" value="Sim" ${infoCobranca.valor === 'SIM' ? 'checked' : ''} class="accent-[#ECA045]"> Sim
+                            </label>
+                            <label class="flex items-center gap-2 cursor-pointer text-[#D4CFC7]">
+                                <input type="radio" name="cobranca_diamantes" value="Não" ${infoCobranca.valor === 'NÃO' ? 'checked' : ''} class="accent-[#ECA045]"> Não
+                            </label>
+                        </div>
+                    </div>`;
+            }
+            htmlAba1 += htmlCobranca;
+
+            let htmlAba2 = `
+                ${cardTemplate("Tipo do Evento", infoTipoEvento.valor, false, infoTipoEvento.field_id)}
+                ${cardTemplate("Modalidade", infoModalidade.valor, false, infoModalidade.field_id)}
+            `;
+
+            const valSwap = formatarBooleano(getValor("swap"));
+            if (valSwap === 'SIM') {
+                htmlAba2 += cardTemplate("SWAP", valSwap);
+            }
+
+            htmlAba2 += `
+                ${cardTemplate("Nome do Evento", infoNomeEvento.valor, false, infoNomeEvento.field_id)}
+                ${cardTemplate("Senha", infoSenha.valor, false, infoSenha.field_id)}
+                ${cardTemplate("Nº de Jogadores", infoNumJogadores.valor, false, infoNumJogadores.field_id)}
+                ${cardTemplate("Tempo de Ação", infoTempoAcao.valor, false, infoTempoAcao.field_id)}
+                <div class="grid grid-cols-2 gap-3">
+                    ${cardTemplate("Premiação Garantida", strPremio, false, infoPremio.field_id)}
+                    ${cardTemplate("GTD Calculado", gtdCalculado, true)}
+                </div>
+                ${cardTemplate("Nº de Vagas Garantidas", infoVagas.valor, false, infoVagas.field_id)}
+                <div class="grid grid-cols-2 gap-3">
+                    ${cardTemplate("Tickets", strTickets, false, infoTickets.field_id)}
+                    ${cardTemplate("Ticket Calculado", ticketCalculado, true)}
+                </div>
+                ${cardTemplate("Cálculo de Pagamento", infoCalcPagamento.valor, false, infoCalcPagamento.field_id)}
+                <div class="grid grid-cols-2 gap-3">
+                    ${cardTemplate("Buy-in", strBuyIn, false, infoBuyIn.field_id)}
+                    ${cardTemplate("Buy-in Calculado", buyInCalculado, true)}
+                </div>
+                ${cardTemplate("Rebuy", valRebuy)}
+                <div class="grid grid-cols-2 gap-3">
+                    ${cardTemplate("Rebuy (Valor)", rebuyCalculado)}
+                    ${cardTemplate("Stack (Rebuy)", infoStackRebuy.valor, false, infoStackRebuy.field_id)}
+                </div>
+                ${cardTemplate("Rebuys (QTD)", infoRebuysQTD.valor, false, infoRebuysQTD.field_id)}
+                ${cardTemplate("Rebuy Duplo", infoRebuyDuplo.valor, false, infoRebuyDuplo.field_id)}
+                ${cardTemplate("Add-on", valAddon)}
+                <div class="grid grid-cols-2 gap-3">
+                    ${cardTemplate("Add-on (Valor)", addonCalculado)}
+                    ${cardTemplate("Stack (Add-on)", infoStackAddon.valor, false, infoStackAddon.field_id)}
+                </div>
+                ${cardTemplate("Intervalo Add-on", infoIntervaloAddon.valor, false, infoIntervaloAddon.field_id)}
+                ${cardTemplate("Rake", infoRake.valor, false, infoRake.field_id)}
+                ${cardTemplate("Blinds (Estrutura)", infoBlinds.valor, false, infoBlinds.field_id)}
+                ${cardTemplate("Stack de Fichas", infoStackFichas.valor, false, infoStackFichas.field_id)}
+                ${cardTemplate("Tempo de Blinds", infoTempoBlinds.valor, false, infoTempoBlinds.field_id)}
+                ${cardTemplate("Registro Tardio", infoRegistroTardio.valor, false, infoRegistroTardio.field_id)}
+                ${cardTemplate("Early Bird", infoEarlyBird.valor, false, infoEarlyBird.field_id)}
+                ${cardTemplate("Early Bird Level", infoEarlyBirdLevel.valor, false, infoEarlyBirdLevel.field_id)}
+                ${cardTemplate("Estrutura de % Early Bird", infoEstruturaEarlyBird.valor, false, infoEstruturaEarlyBird.field_id)}
+                ${cardTemplate("Data e Hora", valDataHora, false, infoDataHora.field_id)}
+            `;
+
+            document.getElementById('aba1-conteudo').innerHTML = htmlAba1;
+            document.getElementById('aba2-conteudo').innerHTML = htmlAba2;
+            document.getElementById('container-btn-upload-lobby').innerHTML = btnAnexoLobby;
+
+            alternarAba('aba1');
+            document.getElementById('card-modal').classList.remove('hidden');
+        })
+        .catch(err => console.error(err))
+        .finally(() => {
+          ocultarLoading();
+        });
+}
+
+function alternarAba(aba) {
+    const btnAba1 = document.getElementById('btn-aba1');
+    const btnAba2 = document.getElementById('btn-aba2');
+    const contAba1 = document.getElementById('aba1-conteudo');
+    const contAba2 = document.getElementById('aba2-conteudo');
+
+    const ativa = "px-5 py-2 rounded-lg bg-[#ECA045] text-black font-semibold text-sm transition-all shadow-md border border-[#ECA045]";
+    const inativa = "px-5 py-2 rounded-lg bg-transparent text-[#7A7265] font-semibold text-sm hover:text-[#D4CFC7] hover:border-[#7A7265] transition-all border border-[#302B27]";
+
+    if (aba === 'aba1') {
+        btnAba1.className = ativa;
+        btnAba2.className = inativa;
+        contAba1.classList.remove('hidden');
+        contAba2.classList.add('hidden');
+    } else {
+        btnAba2.className = ativa;
+        btnAba1.className = inativa;
+        contAba2.classList.remove('hidden');
+        contAba1.classList.add('hidden');
+    }
+}
+
+function fecharModal() {
+    document.getElementById('card-modal').classList.add('hidden');
+}
+
+document.getElementById('btn-aba1').addEventListener('click', () => alternarAba('aba1'));
+document.getElementById('btn-aba2').addEventListener('click', () => alternarAba('aba2'));
+
+document.addEventListener('pointerdown', function(e) {
+    const card = e.target.closest('.kanban-card');
+    if (card && !e.target.closest('[data-acao]') && !e.target.closest('.drag-handle')) {
+        const cardId = card.dataset.cardId;
+        if (cardId) abrirModal(cardId);
+    }
+});
+</script>
+
+<!-- Modal de Edição Rápida -->
+<div id="edit-modal" class="fixed inset-0 z-[80] flex items-center justify-center hidden">
+  <div class="absolute inset-0 bg-black/60 backdrop-blur-sm" onclick="fecharModalEdicao()"></div>
+  <div class="relative bg-[#1A1816]/90 border border-[#302B27] rounded-2xl p-6 max-w-md w-full mx-4 shadow-2xl backdrop-blur-md">
+    <button onclick="fecharModalEdicao()" class="absolute top-3 right-3 text-[#90887D] hover:text-white">
+      <span class="material-symbols-outlined">close</span>
+    </button>
+    <h3 class="text-[#D4CFC7] text-base font-semibold mb-4" id="edit-modal-label"></h3>
+    <input id="edit-modal-input" type="text" class="w-full bg-[#2A2522] border border-[#302B27] rounded-lg px-4 py-2.5 text-[#D4CFC7] text-sm focus:outline-none focus:border-[#ECA045] transition-colors mb-6">
+    <div class="flex gap-3">
+      <button id="btn-edit-salvar" class="flex-1 px-4 py-2 rounded-lg bg-[#ECA045] text-black font-semibold text-sm hover:brightness-110 transition-all">SALVAR</button>
+      <button onclick="fecharModalEdicao()" class="flex-1 px-4 py-2 rounded-lg bg-[#2A2522] text-[#7A7265] text-sm hover:text-[#D4CFC7] transition-all">CANCELAR</button>
+    </div>
+  </div>
+</div>
+
+<!-- Modal de Confirmação de Clonagem -->
+<div id="clone-modal" class="fixed inset-0 z-[60] flex items-center justify-center hidden">
+  <div class="absolute inset-0 bg-black/60 backdrop-blur-sm" onclick="fecharCloneModal()"></div>
+  <div class="relative bg-[#1A1816]/90 border border-[#302B27] rounded-2xl p-6 max-w-sm w-full mx-4 shadow-2xl backdrop-blur-md text-center">
+    <p class="text-[#D4CFC7] text-base mb-6">Deseja Clonar o Card?</p>
+    <div class="flex gap-3 justify-center">
+      <button id="btn-clone-sim" class="px-6 py-2 rounded-lg bg-[#ECA045] text-black font-semibold text-sm hover:brightness-110 transition-all">SIM</button>
+      <button id="btn-clone-nao" class="px-6 py-2 rounded-lg bg-[#2A2522] text-[#7A7265] text-sm hover:text-[#D4CFC7] transition-all">NÃO</button>
+    </div>
+  </div>
+</div>
+
+<!-- Modal de Sucesso da Clonagem -->
+<div id="success-clone-modal" class="fixed inset-0 z-[70] flex items-center justify-center hidden">
+  <div class="absolute inset-0 bg-black/60 backdrop-blur-sm"></div>
+  <div class="relative bg-[#1A1816]/90 border border-[#302B27] rounded-2xl p-6 max-w-sm w-full mx-4 shadow-2xl backdrop-blur-md text-center">
+    <div class="w-16 h-16 rounded-full bg-green-500/10 text-green-500 border border-green-500/20 flex items-center justify-center mx-auto mb-4">
+      <span class="material-symbols-outlined text-3xl">check</span>
+    </div>
+    <p class="text-[#D4CFC7] text-lg font-bold mb-6">Card Clonado com Sucesso!</p>
+    <button id="btn-success-sair" class="px-8 py-2.5 rounded-lg bg-[#2A2522] text-[#D4CFC7] font-semibold text-sm hover:bg-[#302B27] transition-all w-full">SAIR</button>
+  </div>
+</div>
+
+<!-- Modal de Sucesso da Edição -->
+<div id="success-edit-modal" class="fixed inset-0 z-[90] flex items-center justify-center hidden">
+  <div class="absolute inset-0 bg-black/60 backdrop-blur-sm"></div>
+  <div class="relative bg-[#1A1816]/90 border border-[#302B27] rounded-2xl p-6 max-w-sm w-full mx-4 shadow-2xl backdrop-blur-md text-center">
+    <div class="w-16 h-16 rounded-full bg-green-500/10 text-green-500 border border-green-500/20 flex items-center justify-center mx-auto mb-4">
+      <span class="material-symbols-outlined text-3xl">check</span>
+    </div>
+    <p class="text-[#D4CFC7] text-lg font-bold mb-6">Alteração Realizada com Sucesso!</p>
+    <button id="btn-success-edit-sair" class="px-8 py-2.5 rounded-lg bg-[#2A2522] text-[#D4CFC7] font-semibold text-sm hover:bg-[#302B27] transition-all w-full">SAIR</button>
+  </div>
+</div>
+
+<!-- Modal de Criação de Novo Card -->
+<div id="create-card-modal" class="fixed inset-0 z-[100] flex items-center justify-center hidden">
+  <div class="absolute inset-0 bg-black/60 backdrop-blur-sm" onclick="fecharCriarModal()"></div>
+  <div class="relative bg-[#1A1816] border border-[#302B27] rounded-2xl p-6 max-w-lg w-full mx-4 max-h-[85vh] flex flex-col shadow-2xl">
+    <button onclick="fecharCriarModal()" class="absolute top-4 right-4 text-[#90887D] hover:text-white transition-colors">
+      <span class="material-symbols-outlined">close</span>
+    </button>
+
+    <h2 class="text-lg font-bold text-[#ECA045] mb-5 pr-8 uppercase tracking-wider">Abertura de Card</h2>
+
+    <form id="criar-card-form" class="overflow-y-auto pr-2 custom-scrollbar flex-1">
+      <div id="criar-conteudo" class="space-y-3 text-sm"></div>
+      <div class="sticky bottom-0 pt-4 pb-1 bg-[#1A1816]">
+        <button type="submit" id="btn-criar-card-submit" class="w-full px-4 py-3 rounded-lg bg-[#ECA045] text-black font-bold text-sm hover:brightness-110 transition-all uppercase tracking-wider flex items-center justify-center gap-2">
+          <span class="material-symbols-outlined" style="font-size: 18px;">add</span>
+          Criar Card
+        </button>
+      </div>
+    </form>
+  </div>
+</div>
+
+<!-- Modal de Sucesso da Criação -->
+<div id="success-create-modal" class="fixed inset-0 z-[110] flex items-center justify-center hidden">
+  <div class="absolute inset-0 bg-black/60 backdrop-blur-sm"></div>
+  <div class="relative bg-[#1A1816]/90 border border-[#302B27] rounded-2xl p-6 max-w-sm w-full mx-4 shadow-2xl backdrop-blur-md text-center">
+    <div class="w-16 h-16 rounded-full bg-green-500/10 text-green-500 border border-green-500/20 flex items-center justify-center mx-auto mb-4">
+      <span class="material-symbols-outlined text-3xl">check</span>
+    </div>
+    <p class="text-[#D4CFC7] text-lg font-bold mb-6">Card Criado com Sucesso!</p>
+    <div id="anexo-pos-criacao" class="hidden mb-4">
+      <p class="text-[#7A7265] text-xs mb-2">Deseja anexar um arquivo de divulgação?</p>
+      <input type="file" id="anexo-file-input" class="w-full text-xs text-[#D4CFC7] file:mr-3 file:py-2 file:px-4 file:rounded-lg file:border-0 file:text-xs file:font-semibold file:bg-[#ECA045] file:text-black hover:file:brightness-110 cursor-pointer">
+      <button id="btn-anexar-arquivo" class="mt-2 w-full px-4 py-2 rounded-lg bg-[#24201D] text-[#D4CFC7] font-semibold text-sm hover:bg-[#302B27] transition-all hidden">ANEXAR</button>
+    </div>
+    <button id="btn-success-criar-sair" class="px-8 py-2.5 rounded-lg bg-[#2A2522] text-[#D4CFC7] font-semibold text-sm hover:bg-[#302B27] transition-all w-full">SAIR</button>
+  </div>
+</div>
+
+<!-- Modal de Templates -->
+<div id="modal-templates" class="fixed inset-0 z-[120] flex items-center justify-center hidden">
+  <div class="absolute inset-0 bg-black/60 backdrop-blur-sm" onclick="fecharModalTemplates()"></div>
+  <div class="relative bg-[#1A1816]/95 border border-[#302B27] rounded-2xl p-6 max-w-3xl w-full mx-4 shadow-2xl backdrop-blur-md">
+    <button onclick="fecharModalTemplates()" class="absolute top-4 right-4 text-[#90887D] hover:text-white">
+      <span class="material-symbols-outlined">close</span>
+    </button>
+    <h3 class="text-[#ECA045] text-base font-bold tracking-wider mb-6 border-b border-[#302B27]/50 pb-4 uppercase">Biblioteca de Eventos</h3>
+
+    <div class="space-y-4">
+      <div id="cascata-container" class="grid grid-cols-2 gap-4"></div>
+
+      <div id="tabela-templates-container" class="mt-6 mb-2 overflow-y-auto max-h-40 border border-[#302B27] rounded-lg p-3 bg-[#24201D] hidden shadow-inner cursor-default scrollbar-thin scrollbar-thumb-[#302B27] scrollbar-track-transparent">
+        <table class="w-full text-xs text-left">
+          <thead class="text-[#7A7265] uppercase tracking-wider text-[10px] border-b border-[#302B27]">
+            <tr>
+              <th class="pb-2 font-semibold font-mono">Liga</th>
+              <th class="pb-2 font-semibold font-mono">Clube</th>
+              <th class="pb-2 font-semibold font-mono">Evento</th>
+              <th class="pb-2 font-semibold font-mono">Garantido</th>
+              <th class="pb-2"></th>
+            </tr>
+          </thead>
+          <tbody id="tabela-templates-body"></tbody>
+        </table>
+      </div>
+
+      <div class="flex gap-3 mt-4">
+        <button id="btn-carregar-template" disabled onclick="carregarTemplate(_templateSelecionadoId)"
+          class="flex-1 py-3 rounded-lg bg-[#ECA045]/20 text-[#7A7265] font-bold text-sm transition-all disabled:cursor-not-allowed">
+          CARREGAR TEMPLATE
+        </button>
+        <button id="btn-excluir-template" disabled onclick="deletarTemplateSelecionado()"
+          class="px-4 py-3 rounded-lg bg-red-600/20 text-red-500 font-bold text-sm hidden hover:bg-red-600/40 hover:text-red-400 transition-all disabled:cursor-not-allowed">
+          EXCLUIR
+        </button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div id="modal-nomear-template" class="fixed inset-0 z-[130] flex items-center justify-center hidden">
+  <div class="absolute inset-0 bg-black/70 backdrop-blur-sm" onclick="fecharModalNomearTemplate()"></div>
+  <div class="relative bg-[#1A1816]/95 border border-[#302B27] rounded-2xl p-6 max-w-md w-full mx-4 shadow-2xl backdrop-blur-md">
+    <button onclick="fecharModalNomearTemplate()" class="absolute top-4 right-4 text-[#90887D] hover:text-white">
+      <span class="material-symbols-outlined">close</span>
+    </button>
+    <h3 class="text-[#ECA045] text-xs font-bold tracking-widest mb-6 border-b border-[#302B27]/50 pb-4 uppercase">Salvar como Modelo</h3>
+
+    <div class="space-y-4">
+      <div>
+        <label class="text-[#7A7265] text-[10px] font-bold uppercase tracking-wider mb-1 block">Nome Clube</label>
+        <input id="input-clube-template" type="text" class="w-full bg-[#2A2522] border border-[#302B27] rounded-lg px-3 py-2 text-[#D4CFC7] text-sm focus:outline-none focus:border-[#ECA045] transition-colors" placeholder="Inserir informação">
+      </div>
+      <div>
+        <label class="text-[#7A7265] text-[10px] font-bold uppercase tracking-wider mb-1 block">Nome Evento</label>
+        <input id="input-evento-template" type="text" class="w-full bg-[#2A2522] border border-[#302B27] rounded-lg px-3 py-2 text-[#D4CFC7] text-sm focus:outline-none focus:border-[#ECA045] transition-colors" placeholder="Inserir informação">
+      </div>
+    </div>
+
+    <div class="flex gap-3 mt-6">
+      <button onclick="fecharModalNomearTemplate()" class="flex-1 py-2.5 rounded-lg bg-[#2A2522] text-[#7A7265] text-xs font-bold hover:text-[#D4CFC7] transition-all uppercase tracking-wider">
+        Cancelar
+      </button>
+      <button onclick="confirmarSalvarTemplate()" class="flex-1 py-2.5 rounded-lg bg-[#ECA045] text-black font-bold text-xs hover:brightness-110 transition-all uppercase tracking-wider">
+        Confirmar e Salvar
+      </button>
+    </div>
+  </div>
+</div>
+
+<!-- Modal de Edição de Responsáveis -->
+<div id="modal-edicao-labels" class="fixed inset-0 z-[120] flex items-center justify-center hidden">
+  <div class="absolute inset-0 bg-black/60 backdrop-blur-sm" onclick="fecharModalLabels()"></div>
+  <div class="relative bg-[#1A1816]/90 border border-[#302B27] rounded-2xl p-6 max-w-sm w-full mx-4 shadow-2xl backdrop-blur-md">
+    <button onclick="fecharModalLabels()" class="absolute top-3 right-3 text-[#90887D] hover:text-white">
+      <span class="material-symbols-outlined">close</span>
+    </button>
+    <h3 class="text-[#D4CFC7] text-base font-semibold mb-5">Editar Responsáveis</h3>
+    <div class="space-y-3 mb-6" id="labels-checkbox-list"></div>
+    <div class="flex gap-3">
+      <button onclick="salvarLabels()" class="flex-1 px-4 py-2 rounded-lg bg-[#ECA045] text-black font-semibold text-sm hover:brightness-110 transition-all">SALVAR</button>
+      <button onclick="fecharModalLabels()" class="flex-1 px-4 py-2 rounded-lg bg-[#2A2522] text-[#7A7265] text-sm hover:text-[#D4CFC7] transition-all">CANCELAR</button>
+    </div>
+  </div>
+</div>
+
+<script>
+document.getElementById('btn-clone-sim').addEventListener('click', function() {
+    const modal = document.getElementById('clone-modal');
+    const cardId = modal.dataset.cardId;
+    const btn = this;
+    btn.textContent = 'Clonando...';
+    btn.disabled = true;
+
+    fetch(`/api/cards/${cardId}/clone`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' }
+    })
+    .then(r => r.json())
+    .then(d => {
+        if (d.success) {
+            // Esconde o modal de confirmação e mostra o de sucesso
+            document.getElementById('clone-modal').classList.add('hidden');
+            document.getElementById('success-clone-modal').classList.remove('hidden');
+        } else {
+            alert('Erro: ' + (d.error || 'desconhecido'));
+        }
+    })
+    .catch(err => alert('Erro de rede: ' + err.message))
+    .finally(() => { 
+        btn.textContent = 'SIM'; 
+        btn.disabled = false; 
+    });
+});
+
+document.getElementById('btn-clone-nao').addEventListener('click', fecharCloneModal);
+
+document.getElementById('btn-success-sair').addEventListener('click', function() {
+    window.location.reload();
+});
+
+document.getElementById('btn-success-edit-sair').addEventListener('click', function() {
+    window.location.reload();
+});
+
+function fecharCloneModal() {
+  document.getElementById('clone-modal').classList.add('hidden');
+}
+
+document.getElementById('btn-edit-salvar').addEventListener('click', function() {
+    const modal = document.getElementById('edit-modal');
+    const cardId = modal.dataset.cardId;
+    const fieldId = modal.dataset.fieldId;
+    const newValue = document.getElementById('edit-modal-input').value;
+    const btn = this;
+    btn.textContent = 'Salvando...';
+    btn.disabled = true;
+
+    fetch(`/api/cards/${cardId}/fields`, {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ field_id: fieldId, new_value: newValue })
+    })
+    .then(r => r.json())
+    .then(d => {
+        if (d.success) {
+            document.getElementById('edit-modal').classList.add('hidden');
+            document.getElementById('success-edit-modal').classList.remove('hidden');
+        } else {
+            alert('Erro: ' + (d.error || 'desconhecido'));
+        }
+    })
+    .catch(err => alert('Erro de rede: ' + err.message))
+    .finally(() => { btn.textContent = 'SALVAR'; btn.disabled = false; });
+});
+
+function abrirModalEdicao(fieldId, rotulo, valor) {
+    const modal = document.getElementById('edit-modal');
+    modal.dataset.fieldId = fieldId;
+    modal.dataset.cardId = cardIdAtual;
+    document.getElementById('edit-modal-label').textContent = rotulo;
+    document.getElementById('edit-modal-input').value = valor === '-' ? '' : valor;
+    modal.classList.remove('hidden');
+}
+
+function fecharModalEdicao() {
+    document.getElementById('edit-modal').classList.add('hidden');
+}
+
+
+</script>
+
+<script>
+// ===================================================================
+// CONFIGURAÇÃO DOS CAMPOS DO FORMULÁRIO (DATA-DRIVEN)
+// ===================================================================
+const FORM_FIELDS = {
+  aba1: [
+    { id: 'responsavel',       rotulo: 'Responsável',                    tipo: 'select',
+      opcoes: ['Gabriel', 'Gabi', 'Thalia', 'Kelly', 'Felipe', 'Brian', 'Matheus', 'Victória', 'Lidia', 'Isabela', 'Thainã'] },
+    { id: 'liga',              rotulo: 'LIGA',                           tipo: 'liga',
+      fieldLabel: 'Liga/Union' },
+    { id: 'nome-clube',       rotulo: 'NOME DO CLUBE',                  tipo: 'text',
+      fieldLabel: 'Nome do clube/Nombre del club/Club name' },
+    { id: 'id-clube',          rotulo: 'ID DO CLUBE',                    tipo: 'text',
+      fieldLabel: 'ID do clube/ID del club/Club ID' },
+    { id: 'telefone',          rotulo: 'TELEFONE',                       tipo: 'text',
+      fieldLabel: 'Telefone/Telefono/Cellphone' },
+    { id: 'email-responsavel', rotulo: 'E-MAIL DO RESPONSÁVEL',           tipo: 'text',
+      fieldLabel: 'E-mail do responsável/E-mail del responsable/Responsible person\'s e-mail' },
+    { id: 'email-clube',       rotulo: 'E-MAIL DO CLUBE',                tipo: 'text',
+      fieldLabel: 'E-mail do clube/E-mail del club/Club e-mail' },
+    { id: 'moeda',             rotulo: 'MOEDA',                          tipo: 'select',
+      opcoes: ['Dollar (USD)','Reais (BRL)','Soles (SOL)','Bolivianos (BOL)'],
+      fieldLabel: 'Moeda/Moneda/Currency:' },
+  ],
+  aba2: [
+    { id: 'titulo-estrutura', rotulo: 'Estrutura do Torneio',           tipo: 'titulo' },
+    { id: 'tipo-evento',      rotulo: 'Tipo de Evento',                 tipo: 'select',
+      opcoes: ['HG','Satélite/Satellite'],
+      fieldLabel: 'Tipo do evento/ Tipo del evento/ Game type' },
+    { id: 'nome-evento',      rotulo: 'Nome do Evento',                 tipo: 'text',
+      fieldLabel: 'Nome do evento/Nombre del evento/Name of the event' },
+    { id: 'senha',            rotulo: 'Senha',                          tipo: 'text',
+      fieldLabel: 'Senha/Contraseña/Password' },
+    { id: 'modalidade',        rotulo: 'Modalidade',                     tipo: 'select',
+      opcoes: ['NLH','PLO4','PLO5','PLO6'],
+      fieldLabel: 'Modalidade/Modalidad/Type:' },
+    { id: 'swap',             rotulo: 'SWAP',                           tipo: 'select',
+      opcoes: ['Sim/Yes', 'Não/No'],
+      fieldLabel: 'SWAP',
+      dependeDe: { campo: 'modalidade', valor: 'NLH' } },
+    { id: 'num-jogadores',    rotulo: 'N de Jogadores',                 tipo: 'select',
+      opcoes: ['2','4','6','7','8','9'],
+      fieldLabel: 'Nº de jogadores/Jugadores/Players:' },
+    { id: 'tickets-valor',    rotulo: 'Tickets (Valor)',                tipo: 'number',
+      largura: 'half',
+      fieldLabel: 'Tickets (valor/price)' },
+    { id: 'vagas-garantidas', rotulo: 'Nº de Vagas Garantidas',         tipo: 'text',
+      largura: 'half',
+      fieldLabel: 'Nº de vagas garantidas/Nº of seats guaranteed' },
+    { id: 'premiacao',        rotulo: 'Premiação Garantida',            tipo: 'calculado',
+      fieldLabel: 'Premiação garantida/Garantizado/Prize pool',
+      readonly: true },
+    { id: 'tempo-acao',       rotulo: 'Tempo de Ação',                  tipo: 'select',
+      opcoes: ['10s','15s','18s','20s','22s','25s','28s','30s','32s','35s'],
+      fieldLabel: 'Tempo de ação/Tiempo de acción/Action time:' },
+    { id: 'calc-pagamento',   rotulo: 'Cálculo de Pagamento',           tipo: 'select',
+      opcoes: ['Buy-in + Rebuy','Only buy-in'],
+      fieldLabel: 'Cálculo de pagamento/Calculated payout' },
+    { id: 'buy-in',           rotulo: 'Buy-In',                         tipo: 'calculado',
+      fieldLabel: 'Buy-in:', multiplica: true },
+    { id: 'rebuy',            rotulo: 'Rebuy',                          tipo: 'select',
+      opcoes: ['Sim/Sí/Yes','Não/No'],
+      fieldLabel: 'Rebuy:' },
+    { id: 'rebuy-valor',      rotulo: 'Rebuy (Valor)',                  tipo: 'calculado',
+      fieldLabel: 'Rebuy (valor)', dependeDe: { campo: 'rebuy', valor: 'Sim/Sí/Yes' }, multiplica: true },
+    { id: 'rebuy-qtd',        rotulo: 'Rebuy (QTD)',                    tipo: 'select',
+      opcoes: ['1','2','3','4','5','Ilimitado'],
+      fieldLabel: 'Rebuys (qtd)', dependeDe: { campo: 'rebuy', valor: 'Sim/Sí/Yes' } },
+    { id: 'stack-rebuy',      rotulo: 'Stack (Rebuy)',                  tipo: 'text',
+      fieldLabel: 'Stack (rebuy)', dependeDe: { campo: 'rebuy', valor: 'Sim/Sí/Yes' } },
+    { id: 'rebuy-duplo',      rotulo: 'Rebuy Duplo',                    tipo: 'select',
+      opcoes: ['Sim/Yes','Não/No'],
+      fieldLabel: 'Rebuy duplo', dependeDe: { campo: 'rebuy', valor: 'Sim/Sí/Yes' } },
+    { id: 'addon',            rotulo: 'Add-on',                          tipo: 'select',
+      opcoes: ['Sim/Si/Yes','Não/No'],
+      fieldLabel: 'Add-on:' },
+    { id: 'addon-valor',      rotulo: 'Add-on (Valor)',                  tipo: 'calculado',
+      fieldLabel: 'Add-on (Valor/Price)', dependeDe: { campo: 'addon', valor: 'Sim/Si/Yes' }, multiplica: true },
+    { id: 'stack-addon',      rotulo: 'Stack (Add-on)',                  tipo: 'text',
+      fieldLabel: 'Stack (add-on)', dependeDe: { campo: 'addon', valor: 'Sim/Si/Yes' } },
+    { id: 'rake',              rotulo: 'Rake',                           tipo: 'select',
+      opcoes: ['10%','12%','15%'],
+      fieldLabel: 'Rake' },
+    { id: 'intervalo-addon',  rotulo: 'Intervalo Add-on',               tipo: 'select',
+      opcoes: ['3 min','5 min','8 min','10 min'],
+      fieldLabel: 'Intervalo add-on' },
+    { id: 'blinds',           rotulo: 'Blinds (Estrutura)',             tipo: 'select',
+      opcoes: ['Regular','Regular - ante off','Turbo','Turbo - ante off','Hyper turbo','Hyper turbo - ante off'],
+      fieldLabel: 'Blinds (estrutura/structure)' },
+    { id: 'stack-fichas',     rotulo: 'Stack de Fichas',                tipo: 'select',
+      opcoes: ['1.000','2.000','3.000','5.000','7.500','10.000','15.000','20.000','30.000','40.000'],
+      fieldLabel: 'Stack de fichas/chips' },
+    { id: 'tempo-blind',      rotulo: 'Tempo de Blind',                 tipo: 'select',
+      opcoes: ['2 min','3 min','4 min','5 min','6 min','7 min','8 min','10 min','12 min','15 min','20 min','30 min','45 min'],
+      fieldLabel: 'Tempo de blinds/Tiempo de blinds/Blinds up' },
+    { id: 'registro-tardio',  rotulo: 'Registro Tardio',                tipo: 'select',
+      opcoes: ['1','2','3','4','5','6','7','8','9','10','11','12','13','14','15'],
+      fieldLabel: 'Registro tardio/Late register (nível/level)' },
+    { id: 'early-bird',       rotulo: 'Early Bird Level',               tipo: 'select',
+      opcoes: ['Sim/Yes','Não/No'],
+      fieldLabel: 'Early bird' },
+    { id: 'early-bird-estr',  rotulo: 'Estrutura de % Early Bird',      tipo: 'select',
+      opcoes: ['10%','20%','30%','40%','50%'],
+      fieldLabel: 'Estrutura/structure de % do Early Bird:', dependeDe: { campo: 'early-bird', valor: 'Sim/Yes' } },
+    { id: 'early-bird-opcoes',rotulo: 'Early Bird Level (Opções)',      tipo: 'select',
+      opcoes: ['Nivel/level 0 (Antes do inicio)', '1º nivel/level', '2º nivel/level', '3º nivel/level', '4º nivel/level', '5º nivel/level'],
+      fieldLabel: 'Early Bird level', dependeDe: { campo: 'early-bird', valor: 'Sim/Yes' } },
+    { id: 'regulamento',       rotulo: 'REGULAMENTO',                    tipo: 'select',
+      opcoes: ['Português','Español','English'],
+      fieldLabel: 'Regulamento/Reglamento/Regulations' },
+    { id: 'termos',            rotulo: 'Termos de responsabilidade do solicitante', tipo: 'termos',
+      fieldLabel: 'Termos de responsabilidade do solicitante/Solicitor\'s terms of responsibility' },
+    { id: 'observacao',        rotulo: 'OBSERVAÇÃO',                     tipo: 'textarea',
+      fieldLabel: 'OBS:' },
+    { id: 'material',          rotulo: 'Material de divulgação do evento live', tipo: 'attachment' },
+    { id: 'data-hora',         rotulo: 'Data e Hora',                    tipo: 'datetime',
+      fieldLabel: 'Data e hora/Date and time' },
+  ]
+};
+
+// ===================================================================
+// VARIÁVEIS GLOBAIS
+// ===================================================================
+let fieldMapping = {};
+let fieldMappingReady = false;
+let multiplicadorAtual = 1;
+let cardIdCriado = null;
+let cardIdLabelsEditando = null;
+
+const handcaps = {
+  106: 5, 107: 5, 111: 0.8, 113: 1, 127: 3.5, 128: 5,
+  132: 0.8, 135: 1, 136: 18, 137: 0.8, 145: 0.8, 147: 5,
+  148: 0.8, 149: 1, 150: 10, 163: 1, 164: 1, 166: 0.8,
+  173: 0.8, 202: 1, 204: 0.8, 205: 0.7, 220: 60
+};
+
+const LABEL_MASK = {
+  'Sim/Sí/Yes': 'Sim',
+  'Sim/Yes': 'Sim',
+  'Sim/Si/Yes': 'Sim',
+  'Não/No': 'Não',
+  'Satélite/Satellite': 'Satélite',
+  'Nivel/level 0 (Antes do inicio)': 'Nível 0 (Antes do início)',
+  '1º nivel/level': '1º Nível',
+  '2º nivel/level': '2º Nível',
+  '3º nivel/level': '3º Nível',
+  '4º nivel/level': '4º Nível',
+  '5º nivel/level': '5º Nível'
+};
+
+const LABEL_IDS = {
+  'Gabriel': '311440397',
+  'Gabi': '311440398',
+  'Thalia': '311440400',
+  'Kelly': '311440401',
+  'Felipe': '316757820',
+  'Brian': '317269236',
+  'Matheus': '317473263',
+  'Victória': '317662177',
+  'Lidia': '317662198',
+  'Isabela': '317667691',
+  'Thainã': '317667692',
+  '+ de um vinculado': '314511284'
+};
+
+const INPUT_CLASSES = 'w-full bg-[#2A2522] border border-[#302B27] rounded-lg px-3 py-2 text-[#D4CFC7] text-sm focus:outline-none focus:border-[#ECA045] transition-colors mt-1';
+
+// ===================================================================
+// RENDERIZAÇÃO DATA-DRIVEN
+// ===================================================================
+function renderFormFields(fields, containerId) {
+  if (typeof fields === 'string') fields = FORM_FIELDS[fields];
+  const container = document.getElementById(containerId);
+  let html = '';
+  let halfBuffer = [];
+
+  fields.forEach(f => {
+    const fHtml = renderSingleField(f);
+    if (f.largura === 'half') {
+      halfBuffer.push(fHtml);
+      if (halfBuffer.length === 2) {
+        html += '<div class="grid grid-cols-2 gap-3">' + halfBuffer.join('') + '</div>';
+        halfBuffer = [];
+      }
+    } else {
+      if (halfBuffer.length === 1) {
+        html += '<div class="grid grid-cols-2 gap-3">' + halfBuffer[0] + '<div></div></div>';
+        halfBuffer = [];
+      }
+      html += fHtml;
+    }
+  });
+  if (halfBuffer.length === 1) {
+    html += '<div class="grid grid-cols-2 gap-3">' + halfBuffer[0] + '<div></div></div>';
+  }
+  container.innerHTML = html;
+}
+
+function renderSingleField(f) {
+  const dep = f.dependeDe ? ' data-depends-on="campo-' + f.dependeDe.campo + '" data-depends-value="' + f.dependeDe.valor + '"' : '';
+  const oculta = f.dependeDe ? ' hidden' : '';
+  const pular = (f.tipo === 'auto' || f.tipo === 'attachment') ? ' data-pular="true"' : '';
+  const campoId = 'campo-' + f.id;
+
+  switch (f.tipo) {
+    case 'auto':
+      return '<div class="border border-[#302B27]/50 bg-[#24201D] p-3 rounded-lg"' + dep + oculta + '>' +
+        '<span class="text-[#7A7265] text-xs font-semibold uppercase tracking-wider mb-1 block">' + f.rotulo + '</span>' +
+        '<p class="text-[#D4CFC7] text-base">Gerado automaticamente</p></div>';
+
+    case 'text':
+      return '<div class="border border-[#302B27]/50 bg-[#24201D] p-3 rounded-lg"' + dep + oculta + '>' +
+        '<label for="' + campoId + '" class="text-[#7A7265] text-xs font-semibold uppercase tracking-wider mb-1 block">' + f.rotulo + '</label>' +
+        '<input id="' + campoId + '" type="text" data-field-label="' + (f.fieldLabel || '') + '"' + pular + ' class="' + INPUT_CLASSES + '"></div>';
+
+    case 'number':
+      return '<div class="border border-[#302B27]/50 bg-[#24201D] p-3 rounded-lg"' + dep + oculta + '>' +
+        '<label for="' + campoId + '" class="text-[#7A7265] text-xs font-semibold uppercase tracking-wider mb-1 block">' + f.rotulo + '</label>' +
+        '<input id="' + campoId + '" type="number" data-field-label="' + (f.fieldLabel || '') + '"' + pular + ' class="' + INPUT_CLASSES + '"></div>';
+
+    case 'textarea':
+      return '<div class="border border-[#302B27]/50 bg-[#24201D] p-3 rounded-lg"' + dep + oculta + '>' +
+        '<label for="' + campoId + '" class="text-[#7A7265] text-xs font-semibold uppercase tracking-wider mb-1 block">' + f.rotulo + '</label>' +
+        '<textarea id="' + campoId + '" data-field-label="' + (f.fieldLabel || '') + '"' + pular + ' rows="2" class="' + INPUT_CLASSES + '"></textarea></div>';
+
+    case 'select': {
+      const opts = '<option value="">-</option>' + (f.opcoes || []).map(o => '<option value="' + o + '">' + (o === '-' ? '—' : (LABEL_MASK[o] || o)) + '</option>').join('');
+      return '<div class="border border-[#302B27]/50 bg-[#24201D] p-3 rounded-lg"' + dep + oculta + '>' +
+        '<label for="' + campoId + '" class="text-[#7A7265] text-xs font-semibold uppercase tracking-wider mb-1 block">' + f.rotulo + '</label>' +
+        '<select id="' + campoId + '" data-field-label="' + (f.fieldLabel || '') + '"' + pular + ' class="' + INPUT_CLASSES + '" onchange="window.renderConditionalFields()">' + opts + '</select></div>';
+    }
+
+    case 'liga':
+      return '<div class="border border-[#302B27]/50 bg-[#24201D] p-3 rounded-lg"' + dep + oculta + '>' +
+        '<label for="' + campoId + '" class="text-[#7A7265] text-xs font-semibold uppercase tracking-wider mb-1 block">' + f.rotulo + '</label>' +
+        '<select id="' + campoId + '" data-field-label="' + (f.fieldLabel || 'Eventos Privados Suprema* Liga/Union') + '" class="' + INPUT_CLASSES + '" onchange="window.renderConditionalFields()"><option value="">Selecione...</option></select>' +
+        '<div id="liga-multiplicador-info" class="text-[#7A7265] text-xs mt-1 hidden">Multiplicador: <span id="liga-multiplicador-valor">1</span>x</div></div>';
+
+    case 'calculado':
+      return '<div class="border border-[#302B27]/50 bg-[#24201D] p-3 rounded-lg"' + dep + oculta + '>' +
+        '<label for="' + campoId + '" class="text-[#7A7265] text-xs font-semibold uppercase tracking-wider mb-1 block">' + f.rotulo + '</label>' +
+        '<input id="' + campoId + '" type="text" data-field-label="' + (f.fieldLabel || '') + '" data-calculado="true"' + (f.readonly ? ' readonly' : '') + ' class="' + INPUT_CLASSES + '">' +
+        '<div class="text-xs mt-1 text-[#7A7265]">Valor Final: <span id="calc-' + f.id + '" class="text-[#ECA045] font-semibold">---</span></div></div>';
+
+    case 'datetime':
+      return '<div class="border border-[#302B27]/50 bg-[#24201D] p-3 rounded-lg"' + dep + oculta + '>' +
+        '<span class="text-[#7A7265] text-xs font-semibold uppercase tracking-wider mb-1 block">' + f.rotulo + '</span>' +
+        '<input type="hidden" id="' + campoId + '" data-field-label="' + (f.fieldLabel || '') + '">' +
+        '<div class="flex gap-2 mt-1"><input type="date" id="' + campoId + '-date" class="flex-1 ' + INPUT_CLASSES + '">' +
+        '<input type="time" id="' + campoId + '-time" class="flex-1 ' + INPUT_CLASSES + '"></div></div>';
+
+    case 'attachment': {
+      const fileId = campoId + '-file';
+      return '<div class="border border-[#302B27]/50 bg-[#24201D] p-3 rounded-lg"' + dep + oculta + '>' +
+        '<span class="text-[#7A7265] text-xs font-semibold uppercase tracking-wider mb-1 block">' + f.rotulo + '</span>' +
+        '<p class="text-[#90887D] text-xs mt-1">Anexe o arquivo após criar o card.</p>' +
+        '<input type="file" id="' + fileId + '" accept="image/*,.pdf" class="w-full mt-1 text-xs text-[#D4CFC7] file:mr-3 file:py-1.5 file:px-3 file:rounded-lg file:border-0 file:text-xs file:font-semibold file:bg-[#24201D] file:text-[#D4CFC7] hover:file:bg-[#302B27] cursor-pointer"></div>';
+    }
+
+    case 'checkboxes': {
+      const cbId = campoId + '-todos';
+      const opts = (f.opcoes || []).map((o, i) =>
+        '<label class="flex items-center gap-2 cursor-pointer text-[#D4CFC7] text-sm mt-1">' +
+        '<input type="checkbox" name="' + campoId + '[]" value="' + o + '" class="checkbox-termo accent-[#ECA045]"> ' + o + '</label>'
+      ).join('');
+      return '<div class="border border-[#302B27]/50 bg-[#24201D] p-3 rounded-lg"' + dep + oculta + '>' +
+        '<label class="flex items-center gap-2 cursor-pointer text-[#D4CFC7] text-sm font-semibold mb-1 block">' +
+        '<input type="checkbox" id="' + cbId + '" class="checkbox-marcar-todos accent-[#ECA045]"> ' + f.rotulo + '</label>' +
+        '<div class="ml-4 space-y-1">' + opts + '</div>' +
+        '<input type="hidden" id="' + campoId + '" data-field-label="' + (f.fieldLabel || '') + '"></div>';
+    }
+
+    case 'termos':
+      return '<div class="border border-[#302B27]/50 bg-[#24201D] p-3 rounded-lg"' + dep + oculta + '>' +
+        '<span class="text-[#7A7265] text-xs font-semibold uppercase tracking-wider mb-1 block">' + f.rotulo + '</span>' +
+        '<label class="flex items-center gap-2 cursor-pointer text-[#D4CFC7] text-sm mt-1">' +
+        '<input type="checkbox" id="' + campoId + '" class="termo-aceite accent-[#ECA045]" data-field-label="' + (f.fieldLabel || '') + '" value="Aceito"> SELECIONAR TODOS OS TERMOS</label></div>';
+
+    case 'titulo':
+      return '<h3 class="text-md font-bold text-[#ECA045] mt-8 mb-4 uppercase border-b border-[#302B27]/50 pb-2 w-full col-span-full">' + f.rotulo + '</h3>';
+
+    default:
+      return '';
+  }
+}
+
+// ===================================================================
+// RENDERIZAÇÃO CONDICIONAL
+// ===================================================================
+window.renderConditionalFields = function() {
+  document.querySelectorAll('#criar-card-form [data-depends-on]').forEach(el => {
+    const parentId = el.dataset.dependsOn;
+    const valorEsperado = el.dataset.dependsValue;
+    const parent = document.getElementById(parentId);
+    const parentVal = parent ? parent.value : '';
+    const deveOcultar = parentVal !== valorEsperado;
+
+    el.hidden = deveOcultar;
+    el.classList.toggle('hidden', deveOcultar);
+  });
+}
+
+// ===================================================================
+// LIGA — MULTIPLICADOR
+// ===================================================================
+const LIGAS = [
+  '106 - Suprema', '128 - Suprema 2', '107 - Principal', '111 - Suprema EU',
+  '127 - Suprema Peru', '132 - Suprema Asia', '135 - Suprema USA',
+  '136 - Suprema Mexico', '137 - Suprema Argentina', '145 - Suprema Panama',
+  '147 - Suprema Colombia', '148 - Suprema Venezuela', '149 - Suprema Republica Dominicana',
+  '150 - Suprema Bolivia', '163 - Costa Rica', '164 - Kazakhstan',
+  '202 - Suprema India', '204 - Suprema Uruguai'
+];
+
+function popularLigas() {
+  const select = document.getElementById('campo-liga');
+  if (!select) return;
+  select.innerHTML = '';
+  LIGAS.forEach(nome => {
+    const idMatch = nome.match(/\d+/);
+    const id = idMatch ? idMatch[0] : null;
+    const mult = (id && handcaps[id]) ? handcaps[id] : 1;
+    const opt = document.createElement('option');
+    opt.value = nome;
+    opt.textContent = nome + ' (x' + mult + ')';
+    select.appendChild(opt);
+  });
+}
+
+function recalcularCampos() {
+  document.querySelectorAll('[data-calculado="true"]').forEach(input => {
+    const calcId = 'calc-' + input.id.replace('campo-', '');
+    const span = document.getElementById(calcId);
+    if (!span) return;
+    const raw = input.value.trim();
+    if (!raw) { span.textContent = '---'; return; }
+    let num = parseFloat(raw.replace(/[^\d.,]/g, '').replace(/\./g, '').replace(',', '.'));
+    if (isNaN(num) || num <= 0) { span.textContent = '---'; return; }
+    span.textContent = (num * multiplicadorAtual).toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+  });
+}
+
+// ===================================================================
+// DATE/TIME — COMBINA INPUTS EM CAMPO OCULTO
+// ===================================================================
+function setupDateTime(prefix) {
+  const dateEl = document.getElementById(prefix + '-date');
+  const timeEl = document.getElementById(prefix + '-time');
+  const hiddenEl = document.getElementById(prefix);
+  if (!dateEl || !timeEl || !hiddenEl) return;
+
+  function combinar() {
+    if (dateEl.value && timeEl.value) {
+      const [y, m, d] = dateEl.value.split('-');
+      hiddenEl.value = d + '/' + m + '/' + y + ' ' + timeEl.value;
+    } else if (dateEl.value) {
+      const [y, m, d] = dateEl.value.split('-');
+      hiddenEl.value = d + '/' + m + '/' + y;
+    } else {
+      hiddenEl.value = '';
+    }
+  }
+  dateEl.addEventListener('change', combinar);
+  timeEl.addEventListener('change', combinar);
+}
+
+// ===================================================================
+// CHECKBOXES — "MARCAR TODOS"
+// ===================================================================
+function setupCheckboxes() {
+  document.querySelectorAll('.checkbox-marcar-todos').forEach(chk => {
+    chk.addEventListener('change', function() {
+      const container = this.closest('.rounded-lg');
+      if (!container) return;
+      container.querySelectorAll('.checkbox-termo').forEach(cb => cb.checked = this.checked);
+    });
+  });
+}
+
+// ===================================================================
+// MODAL — ABRIR / FECHAR
+// ===================================================================
+function abrirCriarModal(faseId) {
+  cardIdCriado = null;
+  document.getElementById('create-card-modal').dataset.faseId = faseId;
+  document.getElementById('create-card-modal').classList.remove('hidden');
+
+  const allFields = [...FORM_FIELDS.aba1, ...FORM_FIELDS.aba2];
+  renderFormFields(allFields, 'criar-conteudo');
+
+  popularLigas();
+  setupDateTime('campo-data-hora');
+  setupCheckboxes();
+  limparFormCriar();
+  conectarCalculados();
+}
+
+function fecharCriarModal() {
+  document.getElementById('create-card-modal').classList.add('hidden');
+}
+
+function abrirModalLabels(cardId, currentLabelIds) {
+  cardIdLabelsEditando = cardId;
+  const container = document.getElementById('labels-checkbox-list');
+  container.innerHTML = '';
+  for (const [nome, id] of Object.entries(LABEL_IDS)) {
+    const checked = currentLabelIds.includes(id) ? 'checked' : '';
+    container.innerHTML += `
+      <label class="flex items-center gap-2 cursor-pointer text-[#D4CFC7] text-sm">
+        <input type="checkbox" value="${id}" class="label-checkbox accent-[#ECA045]" ${checked}> ${nome}
+      </label>`;
+  }
+  document.getElementById('modal-edicao-labels').classList.remove('hidden');
+}
+
+function fecharModalLabels() {
+  document.getElementById('modal-edicao-labels').classList.add('hidden');
+  cardIdLabelsEditando = null;
+}
+
+let templatesGlobais = [];
+
+function criarDropdown(id, placeholder) {
+  return `
+    <div class="relative" id="${id}">
+      <label class="text-[#7A7265] text-[10px] font-bold uppercase tracking-wider mb-1 block">${placeholder}</label>
+      <button type="button" class="w-full bg-[#2A2522] border border-[#302B27] rounded-lg px-3 py-2 text-[#D4CFC7] text-sm text-left flex justify-between items-center" onclick="toggleDropdown('${id}')">
+        <span class="dropdown-text">Selecione...</span>
+        <span class="material-symbols-outlined text-[16px]">expand_more</span>
+      </button>
+      <div class="dropdown-menu absolute z-50 w-full mt-1 bg-[#2A2522] border border-[#302B27] rounded-lg shadow-xl hidden">
+        <input type="text" class="dropdown-search w-full bg-transparent border-b border-[#302B27] px-3 py-2 text-[#D4CFC7] text-sm outline-none" placeholder="Buscar...">
+        <ul class="dropdown-list max-h-48 overflow-y-auto"></ul>
+      </div>
+    </div>`;
+}
+
+function toggleDropdown(id) {
+  const menu = document.getElementById(id).querySelector('.dropdown-menu');
+  const estaOculto = menu.classList.contains('hidden');
+  document.querySelectorAll('.dropdown-menu').forEach(m => m.classList.add('hidden'));
+  if (estaOculto) menu.classList.remove('hidden');
+}
+
+function popularDropdown(id, opcoes) {
+  const ul = document.querySelector(`#${id} .dropdown-list`);
+  ul.innerHTML = opcoes.map(o => `
+    <li class="px-3 py-2 text-[#D4CFC7] text-sm hover:bg-[#302B27] cursor-pointer" onclick="selecionarOpcao('${id}','${o}')">${o}</li>
+  `).join('');
+}
+
+function selecionarOpcao(id, valor) {
+  const container = document.getElementById(id);
+  container.querySelector('.dropdown-text').textContent = valor;
+  container.querySelector('.dropdown-menu').classList.add('hidden');
+
+  if (id === 'drop-liga') onLigaChange(valor);
+  else if (id === 'drop-clube') onClubeChange(valor);
+  else if (id === 'drop-evento') onEventoChange(valor);
+  else if (id === 'drop-garantido') onGarantidoChange(valor);
+}
+
+function abrirModalTemplates() {
+  document.getElementById('modal-templates').classList.remove('hidden');
+  _templateSelecionadoId = null;
+  document.getElementById('btn-excluir-template').classList.add('hidden');
+  document.getElementById('cascata-container').innerHTML =
+    criarDropdown('drop-liga', 'Liga') +
+    criarDropdown('drop-clube', 'Clube') +
+    criarDropdown('drop-evento', 'Nome do Evento') +
+    criarDropdown('drop-garantido', 'Garantido');
+
+  fetch('/api/templates')
+    .then(r => r.json())
+    .then(data => {
+      templatesGlobais = data.templates || [];
+      const ligas = [...new Set(templatesGlobais.map(t => t.liga).filter(Boolean))];
+      popularDropdown('drop-liga', ligas);
+      atualizarTabelaTemplates();
+    });
+}
+
+let _templateSelecionadoId = null;
+
+function abrirModalNomearTemplate() {
+  let nomeEventoOriginal = "";
+
+  const elTitulo = document.querySelector('#card-modal h2') || document.querySelector('#modal-detalhes h2');
+  if (elTitulo) nomeEventoOriginal = elTitulo.textContent.replace(/\(NÃO MEXER\)/gi, '').trim();
+
+  document.getElementById('input-clube-template').value = '';
+  document.getElementById('input-evento-template').value = nomeEventoOriginal;
+  document.getElementById('modal-nomear-template').classList.remove('hidden');
+}
+
+function fecharModalNomearTemplate() {
+  document.getElementById('modal-nomear-template').classList.add('hidden');
+}
+
+function confirmarSalvarTemplate() {
+  const clube = document.getElementById('input-clube-template').value.trim();
+  const evento = document.getElementById('input-evento-template').value.trim();
+  
+  if (!clube || !evento) {
+    alert('Por favor, preencha o Nome Clube e o Nome Evento para organizar o modelo.');
+    return;
+  }
+  
+  if (typeof cardIdAtual === 'undefined' || !cardIdAtual) {
+    alert('Erro: ID do card não identificado.');
+    return;
+  }
+
+  fecharModalNomearTemplate();
+  mostrarLoading('SALVANDO TEMPLATE...');
+
+  fetch('/api/salvar-template', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({
+      card_id: cardIdAtual,
+      clube_customizado: clube,
+      evento_customizado: evento
+    })
+  })
+  .then(r => r.json())
+  .then(data => {
+    if (data.success) {
+      alert('Template armazenado com sucesso na Biblioteca!');
+      if (typeof abrirModalTemplates === 'function' && !document.getElementById('modal-templates').classList.contains('hidden')) {
+        abrirModalTemplates();
+      }
+    } else {
+      alert('Erro ao processar modelo: ' + (data.error || 'Erro interno'));
+    }
+  })
+  .catch(err => alert('Erro de comunicação: ' + err.message))
+  .finally(() => ocultarLoading());
+}
+
+function salvarCardComoTemplate() {
+  if (!cardIdAtual) return;
+  fetch('/api/salvar-template', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ card_id: cardIdAtual })
+  })
+  .then(r => r.json())
+  .then(data => {
+    if (data.success) alert('Estrutura de evento padronizada com sucesso!');
+    else alert('Erro ao processar template: ' + (data.error || 'Erro interno'));
+  })
+  .catch(err => alert('Erro na comunicação com o servidor: ' + err.message));
+}
+
+function fecharModalTemplates() {
+  document.getElementById('modal-templates').classList.add('hidden');
+}
+
+function onLigaChange(liga) {
+  const clubes = [...new Set(templatesGlobais.filter(t => t.liga === liga).map(t => t.clube).filter(Boolean))];
+  popularDropdown('drop-clube', clubes);
+  popularDropdown('drop-evento', []);
+  popularDropdown('drop-garantido', []);
+  limparTexto('drop-clube');
+  limparTexto('drop-evento');
+  limparTexto('drop-garantido');
+  document.getElementById('btn-carregar-template').disabled = true;
+  atualizarTabelaTemplates();
+}
+
+function onClubeChange(clube) {
+  const liga = document.querySelector('#drop-liga .dropdown-text').textContent;
+  const eventos = [...new Set(templatesGlobais.filter(t => t.liga === liga && t.clube === clube).map(t => t.nome_evento).filter(Boolean))];
+  popularDropdown('drop-evento', eventos);
+  popularDropdown('drop-garantido', []);
+  limparTexto('drop-evento');
+  limparTexto('drop-garantido');
+  document.getElementById('btn-carregar-template').disabled = true;
+  atualizarTabelaTemplates();
+}
+
+function onEventoChange(evento) {
+  const liga = document.querySelector('#drop-liga .dropdown-text').textContent;
+  const clube = document.querySelector('#drop-clube .dropdown-text').textContent;
+  const garantidos = [...new Set(templatesGlobais.filter(t => t.liga === liga && t.clube === clube && t.nome_evento === evento).map(t => t.garantido).filter(Boolean))];
+  popularDropdown('drop-garantido', garantidos);
+  limparTexto('drop-garantido');
+  document.getElementById('btn-carregar-template').disabled = true;
+  atualizarTabelaTemplates();
+}
+
+function onGarantidoChange(garantido) {
+  const liga = document.querySelector('#drop-liga .dropdown-text').textContent;
+  const clube = document.querySelector('#drop-clube .dropdown-text').textContent;
+  const evento = document.querySelector('#drop-evento .dropdown-text').textContent;
+
+  const match = templatesGlobais.find(t =>
+    t.liga === liga && t.clube === clube &&
+    t.nome_evento === evento && t.garantido === garantido
+  );
+  _templateSelecionadoId = match ? match.id : null;
+
+  const btnCarregar = document.getElementById('btn-carregar-template');
+  btnCarregar.disabled = false;
+  btnCarregar.classList.remove('bg-[#ECA045]/20', 'text-[#7A7265]');
+  btnCarregar.classList.add('bg-[#ECA045]', 'text-black');
+
+  const btnExcluir = document.getElementById('btn-excluir-template');
+  if (_templateSelecionadoId) {
+    btnExcluir.disabled = false;
+    btnExcluir.classList.remove('hidden');
+  }
+}
+
+function deletarTemplateSelecionado() {
+  if (!_templateSelecionadoId) return;
+  if (!confirm('Excluir este template da biblioteca?')) return;
+
+  fetch('/api/deletar-template', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ template_id: _templateSelecionadoId })
+  })
+  .then(r => r.json())
+  .then(data => {
+    if (data.success) {
+      fecharModalTemplates();
+      setTimeout(() => abrirModalTemplates(), 100);
+    } else {
+      alert('Erro: ' + (data.error || 'desconhecido'));
+    }
+  })
+  .catch(err => alert('Erro de rede: ' + err.message));
+}
+
+function atualizarTabelaTemplates() {
+  const getVal = id => document.querySelector(`#${id} .dropdown-text`).textContent;
+  const liga = getVal('drop-liga');
+  const clube = getVal('drop-clube');
+  const evento = getVal('drop-evento');
+  const garantido = getVal('drop-garantido');
+
+  const container = document.getElementById('tabela-templates-container');
+  const tbody = document.getElementById('tabela-templates-body');
+
+  let filtrados = templatesGlobais;
+  if (liga && liga !== 'Selecione...') filtrados = filtrados.filter(t => t.liga === liga);
+  if (clube && clube !== 'Selecione...') filtrados = filtrados.filter(t => t.clube === clube);
+  if (evento && evento !== 'Selecione...') filtrados = filtrados.filter(t => t.nome_evento === evento);
+  if (garantido && garantido !== 'Selecione...') filtrados = filtrados.filter(t => t.garantido === garantido);
+
+  const temFiltroAtivo = (liga !== 'Selecione...' || clube !== 'Selecione...' || evento !== 'Selecione...' || garantido !== 'Selecione...');
+
+  if (!temFiltroAtivo || filtrados.length === 0) {
+    container.classList.add('hidden');
+    return;
+  }
+
+  tbody.innerHTML = filtrados.map(t => `
+    <tr class="border-b border-[#302B27]/40 hover:bg-[#302B27]/40 transition-colors group">
+      <td class="py-2.5 pr-2 text-[#7A7265] truncate max-w-[80px]" title="${t.liga || '-'}">${t.liga || '-'}</td>
+      <td class="py-2.5 pr-2 text-[#90887D] truncate max-w-[90px]" title="${t.clube || '-'}">${t.clube || '-'}</td>
+      <td class="py-2.5 pr-2 text-[#D4CFC7] font-medium truncate max-w-[120px]" title="${t.nome_evento || '-'}">${t.nome_evento || '-'}</td>
+      <td class="py-2.5 pr-2 text-[#ECA045] font-semibold">${t.garantido || '-'}</td>
+      <td class="py-2.5 text-right w-16">
+        <button onclick="carregarTemplate('${t.id}')" class="text-[#ECA045] text-[10px] font-bold uppercase tracking-wider hover:text-white transition-colors bg-[#302B27]/50 hover:bg-[#ECA045]/20 px-2 py-1 rounded cursor-pointer opacity-0 group-hover:opacity-100 focus:opacity-100">
+          USAR
+        </button>
+      </td>
+    </tr>
+  `).join('');
+  
+  container.classList.remove('hidden');
+}
+
+function carregarTemplate(templateId) {
+  const template = templatesGlobais.find(t => t.id === templateId);
+  if (!template || !template.campos_completos) {
+    alert('Erro: Template corrompido ou salvo em versão antiga. Exclua e salve novamente.');
+    return;
+  }
+
+  mostrarLoading('PREPARANDO DADOS...');
+
+  const btnAdicionar = document.querySelector('.adicionar-card-footer') || document.querySelector('[onclick^="abrirCriarModal"]');
+  if (btnAdicionar) {
+    btnAdicionar.click();
+  } else if (typeof abrirCriarModal === 'function') {
+    const primeiraFaseId = document.querySelector('.coluna-kanban')?.getAttribute('data-fase-id');
+    if (primeiraFaseId) abrirCriarModal(primeiraFaseId);
+    else fallbackAbrirModal();
+  } else {
+    fallbackAbrirModal();
+  }
+
+  setTimeout(() => {
+    const allFields = [
+      ...(typeof FORM_FIELDS !== 'undefined' && FORM_FIELDS.aba1 ? FORM_FIELDS.aba1 : []),
+      ...(typeof FORM_FIELDS !== 'undefined' && FORM_FIELDS.aba2 ? FORM_FIELDS.aba2 : [])
+    ];
+    
+    const labelParaId = {};
+    allFields.forEach(f => {
+      if (f.fieldLabel) labelParaId[f.fieldLabel] = f.id;
+    });
+
+    Object.entries(template.campos_completos).forEach(([fieldLabel, value]) => {
+      if (!value || value === '') return;
+
+      const lbl = fieldLabel.toLowerCase();
+      
+      if (lbl.includes('data') || lbl.includes('hora') || 
+          lbl.includes('date') || lbl.includes('time') || 
+          lbl.includes('responsável') || lbl.includes('responsable') || 
+          lbl.includes('assignee')) {
+        return;
+      }
+
+      const fieldId = labelParaId[fieldLabel];
+      if (!fieldId) return;
+
+      const input = document.getElementById(`campo-${fieldId}`);
+      if (!input) return;
+
+      if (input.type === 'checkbox') {
+        input.checked = false;
+        input.dispatchEvent(new Event('change', { bubbles: true }));
+        return;
+      }
+
+      input.value = value;
+      input.dispatchEvent(new Event('input', { bubbles: true }));
+      input.dispatchEvent(new Event('change', { bubbles: true }));
+    });
+
+    if (typeof window.renderConditionalFields === 'function') {
+      window.renderConditionalFields();
+    }
+    
+    fecharModalTemplates();
+    ocultarLoading();
+  }, 400);
+}
+
+function fallbackAbrirModal() {
+  document.getElementById('create-card-modal').classList.remove('hidden');
+  if (typeof renderFormFields === 'function') {
+    const all = [
+      ...(typeof FORM_FIELDS !== 'undefined' && FORM_FIELDS.aba1 ? FORM_FIELDS.aba1 : []),
+      ...(typeof FORM_FIELDS !== 'undefined' && FORM_FIELDS.aba2 ? FORM_FIELDS.aba2 : [])
+    ];
+    renderFormFields(all, 'criar-conteudo');
+  }
+}
+
+function swampt(id) { document.querySelector(`#${id} .dropdown-text`).textContent = 'Selecione...'; }
+const limparTexto = swampt;
+
+document.addEventListener('click', e => {
+  if (!e.target.closest('.relative[id^="drop-"]')) {
+    document.querySelectorAll('.dropdown-menu').forEach(m => m.classList.add('hidden'));
+  }
+});
+
+document.addEventListener('input', e => {
+  if (e.target.classList.contains('dropdown-search')) {
+    const termo = e.target.value.toLowerCase();
+    const ul = e.target.closest('.dropdown-menu').querySelector('.dropdown-list');
+    ul.querySelectorAll('li').forEach(li => {
+      li.style.display = li.textContent.toLowerCase().includes(termo) ? '' : 'none';
+    });
+  }
+});
+
+function salvarLabels() {
+  const checks = document.querySelectorAll('#labels-checkbox-list .label-checkbox:checked');
+  const labelIds = Array.from(checks).map(c => c.value);
+  const cardId = cardIdLabelsEditando;
+  if (!cardId) return;
+
+  mostrarLoading('ATUALIZANDO......');
+
+  fetch('/api/atualizar-labels', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ card_id: cardId, label_ids: labelIds })
+  })
+  .then(r => r.json())
+  .then(data => {
+    if (data.success) {
+      fecharModalLabels();
+      location.reload();
+    } else {
+      alert('Erro: ' + (data.error || 'desconhecido'));
+    }
+  })
+  .catch(err => alert('Erro de rede: ' + err.message));
+}
+
+function limparFormCriar() {
+  const form = document.getElementById('criar-card-form');
+  form.querySelectorAll('input, textarea').forEach(el => { if (el.type !== 'hidden') el.value = ''; });
+  form.querySelectorAll('select').forEach(el => el.selectedIndex = 0);
+  form.querySelectorAll('input[type="hidden"]').forEach(el => el.value = '');
+  form.querySelectorAll('.termo-aceite').forEach(cb => cb.checked = false);
+  multiplicadorAtual = 1;
+  const info = document.getElementById('liga-multiplicador-info');
+  if (info) info.classList.add('hidden');
+  document.querySelectorAll('[id^="calc-"]').forEach(el => el.textContent = '---');
+  renderConditionalFields();
+}
+
+// ===================================================================
+// MA Field ID MAPPING
+// ===================================================================
+function carregarFieldMapping() {
+  mostrarLoading('CARREGANDO QUADRO...');
+  fetch('/api/pipe-fields')
+    .then(r => {
+      if (!r.ok) {
+        console.error('[carregarFieldMapping] HTTP', r.status, r.statusText);
+      }
+      return r.json();
+    })
+    .then(data => {
+      if (!data.success) {
+        console.error('[carregarFieldMapping] API retornou erro:', data.error);
+      } else if (!Array.isArray(data.fields) || data.fields.length === 0) {
+        console.warn('[carregarFieldMapping] Nenhum campo retornado pela API.');
+      } else {
+        data.fields.forEach(f => { fieldMapping[f.label] = f.id; });
+      }
+      fieldMappingReady = true;
+    })
+    .catch(err => {
+      console.error("Erro ao carregar mapeamento:", err);
+      fieldMappingReady = true;
+    })
+    .finally(() => {
+      ocultarLoading();
+    });
+}
+
+function lookupFieldId(label) {
+  if (!label || !label.trim()) return null;
+  if (fieldMapping[label]) return fieldMapping[label];
+  const norm = s => s.toLowerCase().trim().replace(/\s+/g, ' ');
+  const busca = norm(label);
+  for (const key of Object.keys(fieldMapping)) {
+    if (norm(key) === busca || norm(key).includes(busca) || busca.includes(norm(key))) return fieldMapping[key];
+  }
+  return null;
+}
+
+// ===================================================================
+// EVENTOS — LIGA, CONDICIONAIS, CALCULADOS
+// ===================================================================
+function recalcularPremiacao() {
+  const t = document.getElementById('campo-tickets-valor');
+  const v = document.getElementById('campo-vagas-garantidas');
+  const p = document.getElementById('campo-premiacao');
+  if (!t || !v || !p) return;
+  const tickets = parseFloat(t.value) || 0;
+  const vagas = parseFloat(v.value) || 0;
+  p.value = tickets > 0 && vagas > 0 ? String(tickets * vagas) : '';
+  recalcularCampos();
+}
+
+function conectarCalculados() {
+  document.querySelectorAll('[data-calculado="true"]').forEach(input => {
+    input.addEventListener('input', recalcularCampos);
+  });
+  const ligaEl = document.getElementById('campo-liga');
+  if (ligaEl) {
+    ligaEl.addEventListener('change', function() {
+      const match = this.value.match(/\d+/);
+      const idLiga = match ? parseInt(match[0], 10) : null;
+      multiplicadorAtual = (idLiga && handcaps[idLiga]) ? handcaps[idLiga] : 1;
+      const info = document.getElementById('liga-multiplicador-info');
+      const span = document.getElementById('liga-multiplicador-valor');
+      if (idLiga && handcaps[idLiga]) { span.textContent = multiplicadorAtual; info.classList.remove('hidden'); }
+      else { info.classList.add('hidden'); }
+      recalcularCampos();
+    });
+  }
+  ['campo-tickets-valor', 'campo-vagas-garantidas'].forEach(id => {
+    const el = document.getElementById(id);
+    if (el) el.addEventListener('input', recalcularPremiacao);
+  });
+}
+
+// ===================================================================
+// GATILHO "ADICIONAR CARD"
+// ===================================================================
+document.querySelectorAll('.adicionar-card-footer').forEach(btn => {
+  btn.addEventListener('click', function() {
+    abrirCriarModal(this.closest('[data-fase-id]').dataset.faseId);
+  });
+});
+
+// ===================================================================
+// MONTAGEM DO PAYLOAD
+// ===================================================================
+function montarPayload() {
+  window._labelIds = [];
+  const fields = [];
+  const labelsNaoEncontrados = [];
+
+  document.querySelectorAll('#criar-card-form [data-field-label]').forEach(el => {
+    if (el.closest('.hidden')) return;
+    if (el.dataset.pular === 'true') return;
+
+    const label = el.dataset.fieldLabel;
+    const fieldId = lookupFieldId(label);
+    if (!fieldId) {
+      labelsNaoEncontrados.push(label);
+      return;
+    }
+
+    let value = '';
+    if (el.type === 'checkbox') {
+      if (!el.checked) return;
+      if (el.classList.contains('termo-aceite')) {
+        value = [
+          "Declaro que as informações prestadas estão corretas, são verdadeiras e assumo a inteira responsabilidade pelas mesmas./I declare that the information provided is correct, true and I take full responsibility for it.",
+          "Declaro que as imagens de divultação do evento estão livres de direitos autorais./I declare that the images used to publish the event are free of copyright."
+        ];
+      } else {
+        value = el.value || 'Sim';
+      }
+    } else if (el.type === 'file') {
+      return;
+    } else if (el.type === 'hidden' && !el.value) {
+      const container = el.closest('.rounded-lg');
+      if (container) {
+        const checks = container.querySelectorAll('.checkbox-termo:checked');
+        if (checks.length > 0) value = Array.from(checks).map(c => c.value).join('; ');
+      }
+    } else {
+      value = el.value.trim();
+    }
+
+    const RESPONSAVEL_FIELD_ID = lookupFieldId('Responsável');
+    if (fieldId === RESPONSAVEL_FIELD_ID) {
+      if (LABEL_IDS[value]) window._labelIds = [LABEL_IDS[value]];
+      return;
+    }
+
+    const formField = [...FORM_FIELDS.aba1, ...FORM_FIELDS.aba2].find(ff => ff.id === fieldId);
+    if (formField && formField.multiplica && value && !isNaN(value)) {
+      value = String(parseFloat(value) * (window.multiplicadorAtual || 1));
+    }
+
+    if (!value || value === '-') return;
+
+    if (el.dataset.calculado === 'true') {
+      let num = parseFloat(value.replace(/[^\d.,]/g, '').replace(/\./g, '').replace(',', '.'));
+      if (!isNaN(num) && num > 0) value = String(num * multiplicadorAtual);
+    }
+
+    fields.push({ field_id: fieldId, value: value });
+  });
+
+  if (labelsNaoEncontrados.length > 0) {
+    console.warn('[montarPayload] Labels não encontrados no fieldMapping:', labelsNaoEncontrados);
+  }
+  if (fields.length === 0) {
+    console.warn('[montarPayload] Nenhum campo gerado. fieldMapping keys:', Object.keys(fieldMapping));
+  }
+  return { fields, unmapped: labelsNaoEncontrados };
+}
+
+// ===================================================================
+// SUBMISSÃO
+// ===================================================================
+document.getElementById('criar-card-form').addEventListener('submit', function(e) {
+  e.preventDefault();
+  if (!fieldMappingReady) {
+    alert('Mapeamento de campos ainda não carregado. Tente novamente.');
+    return;
+  }
+  const faseId = document.getElementById('create-card-modal').dataset.faseId;
+  const nomeClube = document.getElementById('campo-nome-clube');
+  const title = (nomeClube ? nomeClube.value.trim() : '') || 'Novo Card';
+  const { fields, unmapped } = montarPayload();
+  if (fields.length === 0) {
+    if (Object.keys(fieldMapping).length === 0) {
+      alert('ERRO CRÍTICO: O dicionário do Pipefy não carregou. Verifique a conexão ou a API.');
+    } else if (unmapped.length > 0) {
+      alert('ERRO DE MATCH: O Pipefy rejeitou os seguintes campos do formulário: ' + unmapped.join(', '));
+    } else {
+      alert('Preencha pelo menos um campo para criar o card.');
+    }
+    return;
+  }
+
+  mostrarLoading('CRIANDO CARD...');
+
+  fetch('/api/criar-card', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ phase_id: faseId, title: title, fields: fields, label_ids: window._labelIds || [] })
+  })
+  .then(r => r.json())
+  .then(data => {
+    if (data.success) {
+      cardIdCriado = data.card.id;
+      fecharCriarModal();
+      const anexoDiv = document.getElementById('anexo-pos-criacao');
+      const fileInput = document.getElementById('anexo-file-input');
+      if (fileInput && fileInput.files && fileInput.files.length > 0) {
+        anexoDiv.classList.remove('hidden');
+      }
+      document.getElementById('success-create-modal').classList.remove('hidden');
+    } else {
+      alert('Erro: ' + (data.error || 'desconhecido'));
+    }
+  })
+  .catch(err => alert('Erro de rede: ' + err.message))
+  .finally(() => ocultarLoading());
+});
+
+// ===================================================================
+// UPLOAD PÓS-CRIAÇÃO (ANEXO)
+// ===================================================================
+document.getElementById('anexo-file-input').addEventListener('change', function() {
+  const btn = document.getElementById('btn-anexar-arquivo');
+  btn.classList.toggle('hidden', !this.files || this.files.length === 0);
+});
+
+document.getElementById('btn-anexar-arquivo').addEventListener('click', function() {
+  const fileInput = document.getElementById('anexo-file-input');
+  if (!fileInput.files || !fileInput.files[0] || !cardIdCriado) return;
+  const formData = new FormData();
+  formData.append('file', fileInput.files[0]);
+  const btn = this;
+  btn.textContent = 'Enviando...';
+  btn.disabled = true;
+  fetch('/api/cards/' + cardIdCriado + '/upload', { method: 'POST', body: formData })
+    .then(r => r.json())
+    .then(d => {
+      if (d.success) { btn.textContent = 'ANEXADO'; btn.classList.add('bg-green-500/20'); }
+      else { alert('Erro: ' + (d.error || '')); btn.textContent = 'ANEXAR'; btn.disabled = false; }
+    })
+    .catch(() => { btn.textContent = 'ANEXAR'; btn.disabled = false; });
+});
+
+// ===================================================================
+// SUCESSO — SAIR
+// ===================================================================
+document.getElementById('btn-success-criar-sair').addEventListener('click', function() {
+  window.location.reload();
+});
+
+// ===================================================================
+// INIT
+// ===================================================================
+carregarFieldMapping();
+</script>
+
+<div id="global-loader" class="fixed inset-0 z-[9999] bg-black/80 backdrop-blur-sm flex items-center justify-center hidden transition-opacity duration-300">
+  <div class="flex flex-col items-center gap-4">
+    <div class="w-10 h-10 border-4 border-[#ECA045] border-t-transparent rounded-full animate-spin shadow-[0_0_15px_rgba(234,160,69,0.5)]"></div>
+    <span id="global-loader-text" class="text-[#ECA045] text-xs font-bold tracking-widest uppercase animate-pulse">CARREGANDO...</span>
+  </div>
+</div>
+<script>
+// ===================================================================
+// BOOTSTRAP DAS COLUNAS (client-side)
+// Antes o Flask renderizava as 5 colunas via Jinja. Agora buscamos os
+// cards em /api/colunas (Cloud Function) e montamos o mesmo HTML aqui.
+// ===================================================================
+(function () {
+  function esc(s) {
+    return String(s == null ? '' : s)
+      .replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;')
+      .replace(/"/g, '&quot;').replace(/'/g, '&#39;');
+  }
+
+  function renderCard(card) {
+    const clube = (card.clube || '');
+    const clubeTrunc = clube.length > 14 ? clube.slice(0, 14) + '.' : clube;
+
+    const labelsValidas = (card.labels || []).filter(l => l.name !== '+ de um vinculado');
+    const labelIds = (card.labels || []).map(l => l.id);
+    const labelIdsJson = esc(JSON.stringify(labelIds));
+
+    let labelsHtml;
+    if (labelsValidas.length) {
+      const chips = labelsValidas.slice(0, 3).map(l =>
+        `<span class="px-3 py-1 rounded-full text-[11px] font-medium border" style="background-color: ${esc(l.color)}22; color: ${esc(l.color)}; border-color: ${esc(l.color)}55;">${esc(l.name)}</span>`
+      ).join('');
+      labelsHtml =
+        `<div class="flex flex-wrap gap-2 items-center mt-2 cursor-pointer hover:opacity-75 transition-opacity" title="Editar Responsáveis" data-acao="editar-labels" onclick='abrirModalLabels("${esc(card.id)}", ${labelIdsJson})'>${chips}</div>`;
+    } else {
+      labelsHtml =
+        `<button data-acao="editar-labels" onclick="abrirModalLabels('${esc(card.id)}', [])" class="mt-2 text-[10px] uppercase tracking-wider text-[#7A7265] hover:text-[#ECA045] border border-dashed border-[#302B27] hover:border-[#ECA045] rounded px-2 py-1 flex items-center transition-colors" title="Adicionar Responsável">+ Adicionar Responsável</button>`;
+    }
+
+    const el = document.createElement('div');
+    el.className = 'kanban-card rounded-xl p-3 border flex flex-col cursor-pointer overflow-hidden group relative';
+    el.setAttribute('data-card-id', card.id);
+    el.style.backgroundColor = '#231F1C';
+    el.style.borderColor = 'rgba(70, 63, 58, 0.4)';
+    el.innerHTML = `
+<button data-acao="mover-esquerda" class="absolute left-2 top-1/2 -translate-y-1/2 z-20 text-[#90887D] hover:text-[#ECA045] transition-opacity duration-200 opacity-0 group-hover:opacity-100"><span class="material-symbols-outlined" style="font-size: 24px;">chevron_left</span></button>
+<button data-acao="mover-direita" class="absolute right-2 top-1/2 -translate-y-1/2 z-20 text-[#90887D] hover:text-[#ECA045] transition-opacity duration-200 opacity-0 group-hover:opacity-100"><span class="material-symbols-outlined" style="font-size: 24px;">chevron_right</span></button>
+<div class="flex flex-col gap-3 relative">
+  <div class="flex items-center gap-3 w-full">
+    <span class="material-symbols-outlined drag-handle text-[rgba(255,255,255,0.2)] hover:text-[rgba(255,255,255,0.5)] transition-colors flex-shrink-0 cursor-grab active:cursor-grabbing" style="font-size: 18px;">drag_indicator</span>
+    <h4 class="font-headline-md text-sm font-semibold text-[#FAF3E7] tracking-wide mb-2 flex-1 truncate text-center uppercase">${esc(card.titulo)}</h4>
+    <button data-acao="duplicar" class="text-secondary hover:text-primary transition-colors flex-shrink-0" style="color: rgb(144, 136, 125);"><span class="material-symbols-outlined" style="font-size: 18px;">content_copy</span></button>
+  </div>
+  <div class="grid grid-cols-2 gap-y-3 gap-x-3">
+    <div class="text-center flex flex-col items-center"><div class="text-[9px] font-medium text-[#7A7265] uppercase tracking-widest">CLUBE</div><div class="text-xs font-medium text-[#D4CFC7] truncate uppercase">${esc(clubeTrunc)}</div></div>
+    <div class="text-center flex flex-col items-center"><div class="text-[9px] font-medium text-[#7A7265] uppercase tracking-widest">MODALIDADE</div><div class="text-xs font-medium text-[#D4CFC7] truncate uppercase">${esc(card.jogo)}</div></div>
+    <div class="text-center flex flex-col items-center"><div class="text-[9px] font-medium text-[#7A7265] uppercase tracking-widest">DATA</div><div class="text-xs font-medium text-[#D4CFC7] truncate uppercase">${esc(card.data_hora)}</div></div>
+    <div class="text-center flex flex-col items-center"><div class="text-[9px] font-medium text-[#7A7265] uppercase tracking-widest">PROTOCOLO</div><div class="text-xs font-medium text-[#ECA045] truncate uppercase">${esc(card.protocolo)}</div></div>
+  </div>
+  ${labelsHtml}
+</div>`;
+    return el;
+  }
+
+  function popularColunas(colunas) {
+    Object.values(colunas).forEach(function (fase) {
+      const col = document.querySelector(`[data-fase-id="${fase.id}"]`);
+      if (!col) return;
+      const body = col.querySelector('.coluna-body');
+      if (!body) return;
+      const footer = body.querySelector('.adicionar-card-footer');
+      (fase.cards || []).forEach(function (card) {
+        const el = renderCard(card);
+        if (footer) body.insertBefore(el, footer);
+        else body.appendChild(el);
+      });
+      const badge = col.querySelector('.contador-badge');
+      if (badge) badge.textContent = (fase.cards || []).length;
+    });
+  }
+
+  function carregarColunas() {
+    if (typeof mostrarLoading === 'function') mostrarLoading('CARREGANDO CARDS...');
+    fetch('/api/colunas')
+      .then(r => r.json())
+      .then(d => {
+        if (d && d.success) popularColunas(d.colunas);
+        else console.error('Falha ao carregar colunas:', d && d.error);
+      })
+      .catch(err => console.error('Erro de rede ao carregar colunas:', err.message))
+      .finally(() => { if (typeof ocultarLoading === 'function') ocultarLoading(); });
+  }
+
+  if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', carregarColunas);
+  } else {
+    carregarColunas();
+  }
+})();
+</script>
+</body></html>
