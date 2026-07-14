@@ -29,7 +29,7 @@ Pré-requisitos: Node 20, `npm i -g firebase-tools`, e `firebase login`.
 O projeto precisa estar no **plano Blaze** (Functions exige; tem tier grátis).
 
 ```bash
-cd pipefy
+cd Pipefypainel
 npm --prefix functions install
 
 # 1) Token secreto (guardado no Secret Manager, não no código):
@@ -51,7 +51,7 @@ o `href` no `hub.html` se usar outro domínio/site do Firebase).
 ## Rodar local
 
 ```bash
-cd pipefy
+cd Pipefypainel
 firebase emulators:start   # hosting + functions
 # o token pode ir em functions/.env como PIPEFY_TOKEN=... só para o emulador
 ```
